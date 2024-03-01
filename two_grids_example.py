@@ -4,7 +4,7 @@ import pandas as pd
 
 from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder
 
-@st.cache()
+@st.cache_data()
 def get_data_ex4():
     df = pd.DataFrame(
         np.random.randint(0, 100, 50).reshape(-1, 5), columns=list("abcde")
@@ -21,7 +21,7 @@ st.subheader("Input data")
 st.dataframe(df)
 
 st.subheader("Editable Grids")
-c1, c2 = st.beta_columns(2)
+c1, c2 = st.columns(2)
 with c1:
     grid_return1 = AgGrid(df, key='grid1', editable=True)
     st.text("Grid 1 Return")

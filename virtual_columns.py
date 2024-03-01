@@ -4,7 +4,7 @@ import pandas as pd
 
 from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder
 
-@st.cache()
+@st.cache_data()
 def get_data_ex5():
     rows=10
     df = pd.DataFrame(

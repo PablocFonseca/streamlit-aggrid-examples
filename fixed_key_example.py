@@ -4,7 +4,7 @@ import pandas as pd
 
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-@st.cache()
+@st.cache_data()
 def get_data():
     df = pd.DataFrame(
         np.random.randint(0, 100, 50).reshape(-1, 5), columns= list("abcde")
@@ -43,12 +43,9 @@ button = c1.button("Generate 10 new random lines of data")
 reload_data_option = c2.checkbox("Set reload_data as true on next app refresh.", value=False)
 
 if button:
-    from streamlit import legacy_caching as caching
-    caching.clear_cache()
+    st.cache_data.clear()
     if reload_data_option:
         reload_data=True
-
-
 
 
 key_md = ", key=None" if not key else f",key={key}"

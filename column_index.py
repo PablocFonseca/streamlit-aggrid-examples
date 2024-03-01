@@ -5,7 +5,7 @@ import pandas as pd
 from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder, JsCode, grid_options_builder
 
 
-@st.cache()
+@st.cache_data()
 def get_data(multiindex=False):
     df = pd.DataFrame(
         np.random.randint(0, 100, 100).reshape(-1, 5),
