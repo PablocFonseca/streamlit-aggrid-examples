@@ -10,7 +10,7 @@ now = int(datetime.datetime.now().timestamp())
 start_ts = now - 3 * 30 * 24 * 60 * 60
 
 
-@st.cache
+@st.cache_data
 def make_data():
     df = pd.DataFrame(
         {

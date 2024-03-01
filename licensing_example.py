@@ -6,7 +6,7 @@ from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder
 
 license_key = "For_Trialing_ag-Grid_Only-Not_For_Real_Development_Or_Production_Projects-Valid_Until-18_March_2021_[v2]_MTYxNjAyNTYwMDAwMA==948d8f51e73a17b9d78e03e12b9bf934"
 
-@st.cache()
+@st.cache_data()
 def get_data_ex3():
     df = pd.DataFrame(
         np.random.randint(0, 100, 100).reshape(-1, 5), columns=list("abcde")

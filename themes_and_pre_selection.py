@@ -10,7 +10,7 @@ df = pd.DataFrame(
     columns=list("abcde"),
 )
 
-available_themes = ["streamlit", "light", "dark", "blue", "fresh", "material"]
+available_themes = ["streamlit", "alpine", "balham", "material"]
 selected_theme = st.selectbox("Theme", available_themes)
 
 gb = GridOptionsBuilder.from_dataframe(df)

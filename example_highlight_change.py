@@ -4,7 +4,7 @@ import pandas as pd
 
 from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder, JsCode
 
-@st.cache()
+@st.cache_data()
 def get_data_ex7():
     df = pd.DataFrame(
         np.random.randint(0, 100, 100).reshape(-1, 5), columns=list("abcde")

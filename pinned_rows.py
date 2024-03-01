@@ -4,7 +4,7 @@ import pandas as pd
 
 from st_aggrid import AgGrid, DataReturnMode, GridUpdateMode, GridOptionsBuilder
 
-@st.cache()
+@st.cache_data()
 def get_data_ex5():
     rows=100
     df = pd.DataFrame(
@@ -27,7 +27,7 @@ Pin columns using either pinnedTopRowData or pinnedBottomRowData
 ``` 
 gb = GridOptionsBuilder.from_dataframe(data)
 go = gb.build()
-go['pinnedTopRowData'] = [{'a':'100', 'b':'200'}]
+go['pinnedTopRowData'] = [{'a':100, 'b':200}]
 go['pinnedBottomRowData'] = [{'a':'pinned', 'b':'down'}]
 
 ```  

@@ -17,10 +17,11 @@ dashboards = {
     "Set Pinned Rows": os.path.join(root, "pinned_rows.py"),
     "Theming & Pre-Selection": os.path.join(root, "themes_and_pre_selection.py"),
     "Nested Grids" : os.path.join(root, "nested_grids.py"), 
-    "Rich Cell Editor" : os.path.join(root, "rich_cell_editor.py") 
+    "Rich Cell Editor" : os.path.join(root, "rich_cell_editor.py"),
+    "Save User Settings": os.path.join(root, "user_settings.py")
 }
 
-choice_from_url = query_params = st.experimental_get_query_params().get("example", ["Main Example"])[0]
+choice_from_url = query_params = st.query_params.get("example", ["Main Example"])[0]
 index = list(dashboards.keys()).index(choice_from_url)
 
 choice = st.sidebar.radio("Examples", list(dashboards.keys()), index=index)

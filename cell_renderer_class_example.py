@@ -9,7 +9,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder, JsCode,GridUpdateMode
 now = int(datetime.datetime.now().timestamp())
 start_ts = now - 3 * 30 * 24 * 60 * 60
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data()
 def make_data():
     df = pd.DataFrame(
         {
@@ -111,7 +111,7 @@ grid_options['columnDefs'].append({
     },
 })
 
-st.title("cellRenderer Class Example")
+st.title("Custom cellRenderer Class Example")
 
 response = AgGrid(df,
                   theme="streamlit",

@@ -10,7 +10,7 @@ from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 np.random.seed(42)
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def fetch_data(samples):
     deltas = cycle([
             pd.Timedelta(weeks=-2),
