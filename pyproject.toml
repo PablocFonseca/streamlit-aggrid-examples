@@ -5,8 +5,8 @@ description = ""
 authors = ["Pablo Fonseca"]
 
 [tool.poetry.dependencies]
-python = ">=3.7.8,<4.0"
-streamlit-aggrid = "^0.3.1"
+python = ">=3.8, !=3.9.7"
+streamlit-aggrid = "0.3.4-3"
 
 [tool.poetry.dev-dependencies]
 
