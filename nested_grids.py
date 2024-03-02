@@ -51,7 +51,7 @@ gridOptions = {
         # get the rows for each Detail Grid
         "getDetailRowData": JsCode(
             """function (params) {
-                console.log(params);
+                //console.log(params);
                 params.successCallback(params.data.callRecords);
     }"""
         ).js_code,
@@ -62,8 +62,8 @@ gridOptions = {
 r = AgGrid(
     df,
     gridOptions=gridOptions,
-    height=500,
     allow_unsafe_jscode=True,
     enable_enterprise_modules=True,
-    update_mode=GridUpdateMode.SELECTION_CHANGED
+    #update_mode=GridUpdateMode.SELECTION_CHANGED,
+    key="an_unique_key"
 )
