@@ -4,68 +4,61 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 
 
-data = pd.DataFrame([
-    ['JW', 'Project Leader'],
-    ['SSS','Administrador'],
-    ['AJH','Asset Manager'],
-    ['BM','Project Leader'],
-    ['RHE','Finance Officer'],
-    ['AC','Cleaner'],
-    ['AMM','Manager'],
-    ['PS','Manager'],
-    ['KYL','Manager']
-    ], columns=['User','Position'])
+data = pd.DataFrame(
+    [
+        ["JW", "Project Leader"],
+        ["SSS", "Administrador"],
+        ["AJH", "Asset Manager"],
+        ["BM", "Project Leader"],
+        ["RHE", "Finance Officer"],
+        ["AC", "Cleaner"],
+        ["AMM", "Manager"],
+        ["PS", "Manager"],
+        ["KYL", "Manager"],
+    ],
+    columns=["User", "Position"],
+)
 
 
 columns_state = None
 
-if st.button("Load Column State"):
-    columns_state = [
-        {
-            "colId": "User",
-            "width": 440,
-            "hide": False,
-            "pinned": None,
-            "sort": None,
-            "sortIndex": None,
-            "aggFunc": None,
-            "rowGroup": False,
-            "rowGroupIndex": None,
-            "pivot": False,
-            "pivotIndex": None,
-            "flex": None
-        },
-        {
-            "colId": "Position",
-            "width": 130,
-            "hide": False,
-            "pinned": None,
-            "sort": "asc",
-            "sortIndex": 0,
-            "aggFunc": None,
-            "rowGroup": False,
-            "rowGroupIndex": None,
-            "pivot": False,
-            "pivotIndex": None,
-            "flex": None
-        }
-]
-
-
 gb1 = GridOptionsBuilder.from_dataframe(data)
-gb1.configure_selection(selection_mode="multiple",use_checkbox=True)
+gb1.configure_selection(selection_mode="multiple", use_checkbox=True)
+gb1.configure_side_bar()
 go1 = gb1.build()
+
+
+if st.button("Load Column State"):
+    columns_state
+
+    gridState = {
+        "sideBar": {
+            "visible": True,
+            "position": "right",
+            "openToolPanel": "filters",
+            "toolPanels": {
+                "filters": {"expandedGroupIds": [], "expandedColIds": ["Position"]},
+                "columns": {"expandedGroupIds": []},
+            },
+        },
+        "columnSizing": {
+            "columnSizingModel": [
+                {"colId": "User", "width": 200},
+                {"colId": "Position", "width": 200},
+            ]
+        },
+        "columnOrder": {"orderedColIds": ["User", "Position"]},
+        "rowSelection": ["5"],
+        "focusedCell": {"colId": "User", "rowIndex": 5, "rowPinned": None},
+    }
+
+    go1["initialState"] = gridState
 
 grid1 = AgGrid(
     data,
     go1,
-    use_legacy_selected_rows=False, 
-    key="fixed", 
     update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED,
-    columns_state=columns_state
+    enable_enterprise_modules=True,
 )
 
-#st.write(((grid1.column_state)))
-st.write(columns_state)
-# gb2 = GridOptionsBuilder.from_dataframe(data)
-# gb2.c
+st.write(grid1.grid_response)
