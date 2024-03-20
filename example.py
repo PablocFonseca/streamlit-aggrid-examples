@@ -18,7 +18,7 @@ dashboards = {
     "Theming & Pre-Selection": os.path.join(root, "themes_and_pre_selection.py"),
     "Nested Grids" : os.path.join(root, "nested_grids.py"), 
     "Rich Cell Editor" : os.path.join(root, "rich_cell_editor.py"),
-    "Grid State": os.path.join(root, "save_column_states.py")
+    "Grid State": os.path.join(root, "saving_grid_state.py")
 }
 
 choice_from_url = query_params = st.query_params.get("example", ["Main Example"])[0]
