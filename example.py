@@ -21,8 +21,10 @@ dashboards = {
     "Grid State": os.path.join(root, "saving_grid_state.py")
 }
 
-choice_from_url = query_params = st.query_params.get("example", ["Main Example"])[0]
-index = list(dashboards.keys()).index(choice_from_url)
+index = 0
+choice_from_url = query_params = st.query_params.get("example", None)
+if choice_from_url:
+    index = list(dashboards.keys()).index(choice_from_url)
 
 choice = st.sidebar.radio("Examples", list(dashboards.keys()), index=index)
 
