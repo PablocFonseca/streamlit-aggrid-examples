@@ -4,7 +4,10 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 import uuid
 
-st.set_page_config(layout='wide')
+try:
+  st.set_page_config(layout='wide')
+except:
+  pass
 
 data = pd.DataFrame(
     [
