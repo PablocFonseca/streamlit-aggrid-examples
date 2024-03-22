@@ -7,6 +7,7 @@ authors = ["Pablo Fonseca"]
 [tool.poetry.dependencies]
 python = ">=3.8, !=3.9.7"
 streamlit-aggrid = "0.3.5"
+streamlit-code-editor = "^0.1.12"
 
 [tool.poetry.dev-dependencies]
 
