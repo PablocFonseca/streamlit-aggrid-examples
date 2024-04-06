@@ -6,6 +6,9 @@ import requests
 
 
 url = "https://www.ag-grid.com/example-assets/master-detail-data.json"
+r  = requests.get(url)
+data = r.json()
+
 df = pd.read_json(url)
 df["callRecords"] = df["callRecords"].apply(lambda x: pd.json_normalize(x))
 
@@ -51,19 +54,33 @@ gridOptions = {
         # get the rows for each Detail Grid
         "getDetailRowData": JsCode(
             """function (params) {
-                //console.log(params);
                 params.successCallback(params.data.callRecords);
     }"""
-        ).js_code,
+        ),
+        
     },
+    "rowData": data
 }
 
+tabs = st.tabs(["Grid", "Underlying Data", "Grid Options", "Grid Return"])
 
-r = AgGrid(
-    df,
-    gridOptions=gridOptions,
-    allow_unsafe_jscode=True,
-    enable_enterprise_modules=True,
-    #update_mode=GridUpdateMode.SELECTION_CHANGED,
-    key="an_unique_key"
-)
+with tabs[0]:
+    r = AgGrid(
+        None,
+        gridOptions=gridOptions,
+        allow_unsafe_jscode=True,
+        enable_enterprise_modules=True,
+        # update_mode=GridUpdateMode.SELECTION_CHANGED,
+        key="an_unique_key",
+    )
+
+with tabs[1]:
+    st.write(data)
+
+with tabs[2]:
+    st.write(gridOptions)
+
+# tabs =  st.tabs(['Selected Rows','gridoptions','grid_response'])
+
+# with tabs[0]:
+st.write(r.selected_rows_id)

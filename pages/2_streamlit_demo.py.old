@@ -1,0 +1,272 @@
+import streamlit as st
+
+
+desktopDefaultCols = [
+    # {
+    #     headerName: 'Test Date',
+    #     editable: true,
+    #     cellEditor: 'date',
+    #     field: 'testDate'
+    # },
+    #{headerName: "", valueGetter: "node.id", width: 20}, # this row is for showing node id, handy for testing
+    {
+        # column group 'Participant
+        'headerName': 'Participant',
+        # marryChildren: true,
+        'children': [
+            {
+                'headerName': 'Name',
+                'rowDrag' true,
+                'field' 'name',
+                'width' 200,
+                'editable' true,
+                'enableRowGroup' true,
+                '# enablePivot' true,
+                'filter' 'personFilter',
+                'cellClass' 'vAlign',
+                'floatingFilterComponent' 'personFloatingFilterComponent',
+                'checkboxSelection' function (params) {
+                    # we put checkbox on the name if we are not doing grouping
+                    return params.columnApi.getRowGroupColumns().length === 0;
+                },
+                'headerCheckboxSelection' function (params) {
+                    # we put checkbox on the name if we are not doing grouping
+                    return params.columnApi.getRowGroupColumns().length === 0;
+                },
+                'headerCheckboxSelectionFilteredOnly' true
+            },
+            {
+                'headerName' "Language",
+                'field' "language",
+                'width' 150,
+                'editable' true,
+                'filter' 'agSetColumnFilter',
+                'cellEditor' 'agSelectCellEditor',
+                'cellClass' 'vAlign',
+                'enableRowGroup' true,
+                'enablePivot' true,
+                # rowGroupIndex: 0,
+                # pivotIndex: 0,
+                cellEditorParams: {
+                    values: ['English', 'Spanish', 'French', 'Portuguese', 'German',
+                        'Swedish', 'Norwegian', 'Italian', 'Greek', 'Icelandic', 'Portuguese', 'Maltese']
+                },
+                # pinned: 'left',
+                headerTooltip: "Example tooltip for Language",
+                filterParams: {
+                    selectAllOnMiniFilter: true,
+                    newRowsAction: 'keep',
+                    clearButton: true
+                }
+            },
+            {
+                headerName: "Country", field: "country", width: 150, editable: true,
+                cellRenderer: 'countryCellRenderer',
+                # pivotIndex: 1,
+                # rowGroupIndex: 1,
+                enableRowGroup: true,
+                cellClass: 'vAlign',
+                # colSpan: function(params) {
+                #     if (params.data && params.data.country==='Ireland') {
+                #         return 2;
+                #     } else if (params.data && params.data.country==='France') {
+                #         return 3;
+                #     } else {
+                #         return 1;
+                #     }
+                # },
+                # cellStyle: function(params) {
+                #     if (params.data && params.data.country==='Ireland') {
+                #         return {backgroundColor: 'red'};
+                #     } else if (params.data && params.data.country==='France') {
+                #         return {backgroundColor: 'green'};
+                #     } else {
+                #         return null;
+                #     }
+                # },
+                # rowSpan: function(params) {
+                #     if (params.data && params.data.country==='Ireland') {
+                #         return 2;
+                #     } else if (params.data && params.data.country==='France') {
+                #         return 3;
+                #     } else {
+                #         return 1;
+                #     }
+                # },
+                enablePivot: true,
+                cellEditor: 'agRichSelectCellEditor',
+                cellEditorParams: {
+                    cellRenderer: 'countryCellRenderer',
+                    values: ["Argentina", "Brazil", "Colombia", "France", "Germany", "Greece", "Iceland", "Ireland",
+                        "Italy", "Malta", "Portugal", "Norway", "Peru", "Spain", "Sweden", "United Kingdom",
+                        "Uruguay", "Venezuela", "Belgium", "Luxembourg"]
+                },
+                # pinned: 'left',
+                floatCell: true,
+                filterParams: {
+                    cellRenderer: 'countryCellRenderer',
+                    # cellHeight: 20,
+                    newRowsAction: 'keep',
+                    selectAllOnMiniFilter: true,
+                    clearButton: true
+                },
+                floatingFilterComponent: 'countryFloatingFilterComponent',
+                icons: {
+                    sortAscending: '<i class="fa fa-sort-alpha-up"/>',
+                    sortDescending: '<i class="fa fa-sort-alpha-down"/>'
+                }
+            }
+        ]
+    },
+    {
+        # column group 'Game of Choice'
+        headerName: 'Game of Choice',
+        children: [
+            {
+                headerName: "Game Name", field: "game.name", width: 180, editable: true, filter: 'agSetColumnFilter',
+                tooltipField: 'game.name',
+                cellClass: function () {
+                    return 'alphabet';
+                },
+                filterParams: {
+                    selectAllOnMiniFilter: true,
+                    newRowsAction: 'keep',
+                    clearButton: true
+                },
+                enableRowGroup: true,
+                enablePivot: true,
+                # pinned: 'right',
+                # rowGroupIndex: 1,
+                icons: {
+                    sortAscending: '<i class="fa fa-sort-alpha-up"/>',
+                    sortDescending: '<i class="fa fa-sort-alpha-down"/>'
+                }
+            },
+            {
+                headerName: "Bought", field: "game.bought", filter: 'agSetColumnFilter', editable: true, width: 150,
+                # pinned: 'right',
+                # rowGroupIndex: 2,
+                # pivotIndex: 1,
+                enableRowGroup: true,
+                enablePivot: true,
+                cellClass: 'booleanType',
+                cellRenderer: 'booleanCellRenderer', cellStyle: {"text-align": "center"}, comparator: booleanComparator,
+                floatCell: true,
+                filterParams: {
+                    cellRenderer: 'booleanFilterCellRenderer',
+                    selectAllOnMiniFilter: true,
+                    newRowsAction: 'keep',
+                    clearButton: true
+                }
+            }
+        ]
+    },
+    {
+        # column group 'Performance'
+        headerName: 'Performance',
+        groupId: 'performance',
+        children: [
+            {
+                headerName: "Bank Balance", field: "bankBalance", width: 180, editable: true,
+                filter: 'winningsFilter',
+                valueFormatter: currencyFormatter,
+                type: 'numericColumn',
+                cellClassRules: {
+                    'currencyCell': 'typeof x == "number"'
+                },
+                enableValue: true,
+                # colId: 'sf',
+                # valueGetter: '55',
+                # aggFunc: 'sum',
+                icons: {
+                    sortAscending: '<i class="fa fa-sort-amount-up"/>',
+                    sortDescending: '<i class="fa fa-sort-amount-down"/>'
+                }
+            },
+            {
+                headerName: "Extra Info 1", columnGroupShow: 'open', width: 150, editable: false,
+                sortable: false, suppressMenu: true, cellStyle: {"text-align": "right"},
+                cellRenderer: function () {
+                    return 'Abra...';
+                }
+            },
+            {
+                headerName: "Extra Info 2", columnGroupShow: 'open', width: 150, editable: false,
+                sortable: false, suppressMenu: true, cellStyle: {"text-align": "left"},
+                cellRenderer: function () {
+                    return '...cadabra!';
+                }
+            }
+        ]
+    },
+    {
+        headerName: "Rating", field: "rating", width: 120, editable: true, cellRenderer: 'ratingRenderer',
+        cellClass: 'vAlign',
+        floatCell: true,
+        enableRowGroup: true,
+        enablePivot: true,
+        enableValue: true,
+        filterParams: {cellRenderer: 'ratingFilterRenderer'}
+    },
+    {
+        headerName: "Total Winnings", field: "totalWinnings", filter: 'agNumberColumnFilter',
+        type: 'numericColumn',
+        editable: true, valueParser: numberParser, width: 170,
+        # aggFunc: 'sum',
+        enableValue: true,
+        cellClassRules: {
+            'currencyCell': 'typeof x == "number"'
+        },
+        valueFormatter: currencyFormatter, cellStyle: currencyCssFunc,
+        icons: {
+            sortAscending: '<i class="fa fa-sort-amount-up"/>',
+            sortDescending: '<i class="fa fa-sort-amount-down"/>'
+        }
+    }
+];
+
+
+
+
+
+
+
+
+function createData() {
+    var colDefs = createCols();
+    var rowCount = getRowCount();
+    var colCount = getColCount();
+
+    var row = 0;
+    var data = [];
+
+    eMessage.style.display = 'inline';
+
+    var intervalId = setInterval(function () {
+        if (loadInstanceCopy != loadInstance) {
+            clearInterval(intervalId);
+            return;
+        }
+
+        for (var i = 0; i < 1000; i++) {
+            if (row < rowCount) {
+                var rowItem = createRowItem(row, colCount);
+                data.push(rowItem);
+                row++;
+            }
+        }
+
+        eMessageText.innerHTML = ' Generating rows ' + row;
+
+        if (row >= rowCount) {
+            clearInterval(intervalId);
+            window.setTimeout(function () {
+                gridOptions.api.setColumnDefs(colDefs);
+                gridOptions.api.setRowData(data);
+                eMessage.style.display = 'none';
+                eMessageText.innerHTML = '';
+            }, 0);
+        }
+
+    }, 0);
+}
