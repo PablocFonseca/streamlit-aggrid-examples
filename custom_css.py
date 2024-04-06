@@ -58,4 +58,3 @@ custom_css = {
 
 st.title("rowClassRules Test")
 AgGrid(df, theme="streamlit", custom_css=custom_css, gridOptions=grid_options)
-

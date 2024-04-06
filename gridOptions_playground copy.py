@@ -1,24 +1,60 @@
 from code_editor import code_editor
-import st_aggrid
 from st_aggrid import AgGrid, JsCode
-from st_aggrid.shared import JsCodeEncoder, DataReturnMode
+from st_aggrid.shared import JsCodeEncoder
 
 import streamlit as st
 import json
 import pandas as pd
-
-import importlib
-
-importlib.reload(st_aggrid)
 
 try:
     st.set_page_config(layout="wide")
 except:
     pass
 
+customMenuItem = JsCode(
+    """
+class CustomMenuItem {
+    init(params) {
+        this.eGui = document.createElement('div');
+        this.eGui.innerHTML = `
+            <span class="ag-menu-option-part ag-menu-option-icon" role="presentation"></span>
+            <span class="ag-menu-option-part ag-menu-option-text">${params.name}</span>
+            <span class="ag-menu-option-part ag-menu-option-shortcut"><button class="alert-button">${params.buttonValue}</button></span>
+            <span class="ag-menu-option-part ag-menu-option-popup-pointer">
+                ${params.subMenu ? '<span class="ag-icon ag-icon-small-right" unselectable="on" role="presentation"></span>' : ''}
+            </span>
+        `;
+        this.eButton = this.eGui.querySelector('.alert-button');
+        this.eventListener = () => alert(`${params.name} clicked`);
+        this.eButton.addEventListener('click', this.eventListener);
+    }
+    getGui() {
+        return this.eGui;
+    }
+    configureDefaults() {
+        return true;
+        }
+    setActive(active){}
+    setExpanded(expanded){}
+    select(){}
+    destroy() {
+        if (this.eButton) {
+            this.eButton.removeEventListener('click', this.eventListener);
+        }
+    }                                  
+}
+"""
+)
+
 gridOptions = {
     "columnTypes": {
         "date": {"valueFormatter": "new Date(value).toLocaleDateString()"},
+        "currency": {
+            "width": 150,
+            "valueFormatter": JsCode(
+                """function currencyFormatter(params) {  const value = Math.floor(params.value);  if (isNaN(value)) {    return "";  }  return "£" + value.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");}"""
+            ),
+        },
     },
     "columnDefs": [
         {
@@ -26,7 +62,6 @@ gridOptions = {
             "minWidth": 150,
             "headerCheckboxSelection": True,
             "checkboxSelection": True,
-            "pinned": "left",
         },
         {
             "field": "age",
@@ -34,14 +69,25 @@ gridOptions = {
             "cellStyle": {"fontWeight": "bold"},
         },
         {
-            "field": "Birth Year",
-            "valueGetter": "data.year - data.age",
+            "field": "Prize",
+            "valueGetter": "Math.random() * 100000",
+            "type": "currency",
+            "contextMenuItems": [
+                "copy",
+                "chartRange",
+                "separator",
+                {
+                    "name": "Alert!",
+                    "menuItem": customMenuItem,
+                    "action": JsCode("function () {console.log('alert clicked');}"),
+                },
+            ],
         },
         {"field": "country", "minWidth": 150},
         {"field": "year", "maxWidth": 90},
         {"field": "date", "minWidth": 150, "type": "date"},
         {"field": "sport", "minWidth": 150},
-        {"field": "gold", "type": "numericColumn"},
+        {"field": "gold"},
         {"field": "silver"},
         {"field": "bronze"},
         {"field": "total"},
@@ -94,20 +140,6 @@ gridOptions = {
         "position": "left",
         "defaultToolPanel": "filters",
     },
-    "getContextMenuItems": JsCode(
-        """function(params){
-                                return [
-                                    ...(params.defaultItems || []),
-                                    "separator",
-                                    "chartRange",
-                                    "separator",
-                                    {
-                                    "name": "Shout this row!",
-                                    "action": function(params) { console.dir(params); alert(`${params.node.data.athlete} won ${params.node.data.total} medal(s) at age ${params.node.data.age}! \\nClicked Cell Value: ${params.value}`)},
-                                    "icon": '<img src="https://cdn-icons-png.flaticon.com/128/77/77519.png" width="16" height="16">'
-                                  }
-                                ]}"""
-    ),
 }
 
 custom_buttons = [
@@ -158,10 +190,11 @@ def getData():
 
 data = getData()
 
+
 cols = st.columns([2, 3])
 
 with cols[0]:
-    tab = st.tabs(["GridOptions", "Data"])
+    tab = st.tabs(["GridOptions"])
 
 with tab[0]:
     response_dict = code_editor(
@@ -171,52 +204,19 @@ with tab[0]:
         options=options,
     )
 
-with tab[1]:
-    grid0 = AgGrid(
-        data,
-        height=800,
-        key="grid0",
-        editable=True,
-        suppressMovableColumns=True,
-        filter=True,
-        sortable=False,
-        autoSizeStrategy=dict(type="fitGridWidth"),
-        pagination=True,
-    )
-
-
 with cols[1]:
     opt = response_dict["text"] or gridOptions
-    tabs = st.tabs(
-        [
-            "Grid",
-            "Received Data ",
-            "Response.grid_response",
-            "Response.Data",
-            "Response.selected_rows",
-        ]
-    )
-
-
-from uuid import uuid4
-
-dt = grid0.data.copy()
-
-# dt.index = [str(uuid4()) for i in range(data.shape[0]) ]
-dt.index = [i * 1000 for i in range(data.shape[0])]
-
+    tabs = st.tabs(["Grid", "Data "])
 
 with tabs[0]:
     grid1 = AgGrid(
-        dt,
+        data,
         opt,
         height=800,
-        update_on=["stateChanged"],
+        update_on=[],
         enable_enterprise_modules=True,
         allow_unsafe_jscode=True,
         key="fix3",
-        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        try_to_convert_back_to_original_types=True,
     )
 
 with tabs[1]:
@@ -224,13 +224,3 @@ with tabs[1]:
     st.json(data.head(100).to_json(orient="records"), expanded=False)
     st.markdown("#### Data Description")
     st.markdown(data.describe().to_html(), unsafe_allow_html=True)
-
-with tabs[2]:
-    st.write(grid1.grid_response)
-
-with tabs[3]:
-    df = grid1.data
-    st.write(df)
-
-with tabs[4]:
-    st.write(grid1.selected_rows)

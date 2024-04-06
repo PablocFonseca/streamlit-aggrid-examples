@@ -14,8 +14,8 @@ available_themes = ["streamlit", "alpine", "balham", "material"]
 selected_theme = st.selectbox("Theme", available_themes)
 
 gb = GridOptionsBuilder.from_dataframe(df)
-if st.checkbox('Pre-select rows 4 and 6 when loading.'):
-    gb.configure_selection('multiple', pre_selected_rows=[3,5])
+if st.checkbox("Pre-select rows 4 and 6 when loading."):
+    gb.configure_selection("multiple", pre_selected_rows=["3", "5"])
 
 response = AgGrid(
     df,
@@ -24,5 +24,5 @@ response = AgGrid(
     data_return_mode="filtered_and_sorted",
     update_mode="no_update",
     fit_columns_on_grid_load=True,
-    theme=selected_theme
+    theme=selected_theme,
 )
