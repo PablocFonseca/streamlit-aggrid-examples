@@ -16,6 +16,7 @@ dashboards = {
     "Rich Cell Editor" : os.path.join(root, "60_rich_cell_editor.py"),
     "Nested Grids" : os.path.join(root, "70_nested_grids.py"), 
     "Columns State": os.path.join(root, "80_saving_columns_state.py"),
+    "Tooltips": os.path.join(root, "81_Tooltips.py"),
     "Classic Example": os.path.join(root, "90_main_example.py"),
 }
 
