@@ -15,7 +15,7 @@ columnDefs = [
     'field': "athlete",
     # here the Athlete column will tooltip the Country value
     'tooltipField': "country",
-    'headerTooltip': JsCode("""function(){return "Tooltip for Athlete Column Header"}"""),
+    'headerTooltip': "Tooltip for Athlete Column Header",
   },
   {
     'field': "age",
