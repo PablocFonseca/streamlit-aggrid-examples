@@ -51,4 +51,9 @@ gridOptions =  {
   'tooltipShowDelay': 500,
 };
 
+
+st.markdown("""
+This example implements the one described in [https://ag-grid.com/javascript-data-grid/tooltips/](https://ag-grid.com/javascript-data-grid/tooltips/)
+""")
+
 AgGrid(None, gridOptions, allow_unsafe_jscode=True)
