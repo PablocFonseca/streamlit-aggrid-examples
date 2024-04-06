@@ -24,7 +24,7 @@ columnDefs = [
   },
   {
     'field': "year",
-    'tooltipValueGetter': JsCode("""function(p) {"This is a dynamic tooltip using the value of " + p.value}"""),
+    'tooltipValueGetter': JsCode("""function(p) {return "This is a dynamic tooltip using the value of " + p.value}"""),
     'headerTooltip': "Tooltip for Year Column Header",
   },
   {
