@@ -22,12 +22,16 @@ onCellDoubleClickedHandler = JsCode(r"""
                                     
       let msg = `You double clicked on row ${clickedRowIndex}, column ${clickedColumn}, value is ${clickedValue}`;
                                     
-      alert(msg);                                      
+      alert(msg);
+
+      params.node.setDataValue('doubleClicked', Date.now());       
+                                                                    
     }
 """)
 
 st.markdown("""
   In the example below, we use JsCode to attach the `onCellDoubleClickedHandler` function using the `onCellDoubleClicked` option in gridOptions.
+  The function logs the params to the console, alerts the clicked data and sets the virtual column doubleClicked Timestamp. 
   
   ```javascript
       onCellDoubleClickedHandler = function (params){
@@ -38,13 +42,18 @@ st.markdown("""
                                       
         let msg = `You double clicked on row ${clickedRowIndex}, column ${clickedColumn}, value is ${clickedValue}`;
                                       
-        alert(msg);                                      
+        alert(msg);   
+
+        params.node.setDataValue('doubleClicked', Date.now());                             
     }
   ```
             
   ```python
   
   gd = GridOptionsBuilder().from_dataframe(df)
+  
+  #creates a virtual column to handle click data
+  gd.configure_column("doubleClicked", "doubleClicked Timestamp")
   gd.configure_grid_options(onCellDoubleClicked=onCellDoubleClickedHandler)
   go = gd.build()
 
@@ -55,8 +64,22 @@ st.markdown("""
 
 gd = GridOptionsBuilder().from_dataframe(df)
 
+#creates a virtual column to handle click data
+gd.configure_column("doubleClicked", "doubleClicked Timestamp")
+
 gd.configure_grid_options(onCellDoubleClicked=onCellDoubleClickedHandler)
 
 go = gd.build()
 
-AgGrid(df, go, allow_unsafe_jscode=True)
+tabs =  st.tabs(["Grid", "Response"])
+
+
+with tabs[0]:
+  response = AgGrid(df, go, allow_unsafe_jscode=True)
+
+with tabs[1]:
+  st.write(response.data)
+
+if 'doubleClicked' in response.data.columns:
+  lastDoubleClickedTs = pd.to_datetime(response.data["doubleClicked"], unit='ms').max()
+  st.write(f"Last double click was {lastDoubleClickedTs} UTC")
