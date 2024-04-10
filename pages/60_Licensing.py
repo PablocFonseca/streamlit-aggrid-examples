@@ -13,13 +13,29 @@ def get_data_ex3():
     )
     return df
 
+
 df = get_data_ex3()
 st.subheader("Setting a license")
 st.markdown("""
 Ag-grid (not this component, which is free) has its own [licensing options](https://www.ag-grid.com/documentation/react/licensing/). If you do have an license,
 you can load it though ```license_key``` parameter on grid call.  
 """)
-AgGrid(df, key='grid1', enable_enterprise_modules=True, license_key=license_key)
+
+
+enable_enterprise = st.checkbox("Enable Enterprise Features", True)
+
+
+key = 'enterprise_disabled_grid'
+license_key = None
+
+if enable_enterprise:
+    key = 'enterprise_enabled_grid'
+    license_key=license_key
+
+go = GridOptionsBuilder.from_dataframe(df)
+go.configure_side_bar()
+
+AgGrid(df, go.build(), enable_enterprise_modules=enable_enterprise, license_key=license_key, key=key)
 
 st.markdown("""On this example enterprise features are enabled (advanced column menus) and no watermak is displayed. 
 However, it will only work until 2021-03-18 (When my trial license used on the code expires)""")
