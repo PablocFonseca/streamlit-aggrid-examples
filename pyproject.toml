@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "streamlit-aggrid-examples"
 version = "1.0.0"
 description = ""
