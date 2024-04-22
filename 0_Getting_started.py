@@ -51,7 +51,7 @@ df = get_data()
 
 
 
-tabs = st.tabs(["Grid", "Infered GridOptions", "Returned AgGrid Data"]) #, "Trigger Event Data"])
+tabs = st.tabs(["Grid", "Infered GridOptions", "Returned AgGrid Data", "Trigger Event Data"])
 
 with tabs[0]:
     grid_return = AgGrid(df, update_on=["cellClicked"])
@@ -62,8 +62,8 @@ with tabs[1]:
 with tabs[2]:
     st.write(grid_return.data)
 
-# with tabs[3]:
-#     st.write(grid_return.event_data)
+with tabs[3]:
+    st.write(grid_return.event_data)
 
 
 st.markdown(
