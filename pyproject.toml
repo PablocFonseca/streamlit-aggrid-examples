@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "streamlit-aggrid-examples"
 version = "1.0.0"
 description = ""
@@ -7,7 +8,7 @@ authors = ["Pablo Fonseca"]
 
 [tool.poetry.dependencies]
 python = ">=3.8, !=3.9.7"
-streamlit-aggrid = "^1.0.4-3"
+streamlit-aggrid = "1.0.4-3"
 streamlit-code-editor = "^0.1.12"
 
 [tool.poetry.dev-dependencies]
