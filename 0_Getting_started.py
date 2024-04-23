@@ -74,15 +74,3 @@ Grid return is an AgGridReturn object with props below:
 """
 )
 st.write(grid_return)
-
-import pathlib
-
-root = pathlib.Path(__file__).parent
-path = root / 'ad.html'
-HtmlFile = open( path, 'r', encoding='utf-8')
-source_code = HtmlFile.read()
-print(source_code)
-
-import streamlit.components.v1 as components
-
-components.html(source_code, height=200)
