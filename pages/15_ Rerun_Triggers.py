@@ -43,7 +43,7 @@ sample_data = df
 tabs = st.tabs(["Grid", "Infered GridOptions", "Returned AgGrid Data", "Trigger Event Data"])
 
 with tabs[0]:
-    grid_return = AgGrid(df, update_on=update_on, update_mode='NO_UPDATE')
+    grid_return = AgGrid(df, update_on=update_on, update_mode='NO_UPDATE', editable=True)
 
 with tabs[1]:
     st.write(grid_return.grid_options)
