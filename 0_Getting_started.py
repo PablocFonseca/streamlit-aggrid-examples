@@ -74,3 +74,6 @@ Grid return is an AgGridReturn object with props below:
 """
 )
 st.write(grid_return)
+
+st.sidebar.markdown("""<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578060621218492"
+     crossorigin="anonymous"></script>""", unsafe_allow_html=True)
