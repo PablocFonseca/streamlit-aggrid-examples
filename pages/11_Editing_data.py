@@ -1,18 +1,19 @@
-
 import streamlit as st
 from st_aggrid import AgGrid
 import pandas as pd
 
+
 @st.cache_data
 def get_data():
-  return  pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+    return pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+
 
 df = get_data()
 
 try:
-  st.set_page_config(layout='wide')
+    st.set_page_config(layout="wide")
 except:
-  pass
+    pass
 
 st.markdown("## Making cells editable")
 
@@ -30,7 +31,7 @@ gridOptions = {
     defaultColDef : {
         editable:true
     }
-    (...)
+    ...
 }
 ```
 
@@ -50,19 +51,21 @@ Clicking the buttom samples 50 rows from the data set to simulate data refreshin
 """)
 
 
-tabs = st.tabs(['Grid', 'Underlying Data', 'Infered GridOptions', 'Returned AgGrid Data'])
+tabs = st.tabs(
+    ["Grid", "Underlying Data", "Infered GridOptions", "Returned AgGrid Data"]
+)
 
 with tabs[0]:
-  st.button("Update underlying data.", key='b1')
-  data = df.sample(50)
-  grid_return = AgGrid(data, editable=True, key='grid1')
+    st.button("Update underlying data.", key="b1")
+    data = df.sample(50)
+    grid_return = AgGrid(data, editable=True, key="grid1")
 
 with tabs[1]:
-  st.button("Update underlying data.", key='b2')
-  st.write(data)
+    st.button("Update underlying data.", key="b2")
+    st.write(data)
 
 with tabs[2]:
-  st.write(grid_return.grid_options)
+    st.write(grid_return.grid_options)
 
 with tabs[3]:
-  st.write(grid_return.data)
+    st.write(grid_return.data)

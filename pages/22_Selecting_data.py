@@ -8,14 +8,15 @@ from code_editor import code_editor
 
 @st.cache_data
 def get_data():
-  return  pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+    return pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+
 
 df = get_data()
 
 try:
-  st.set_page_config(layout='wide')
+    st.set_page_config(layout="wide")
 except:
-  pass
+    pass
 
 st.markdown("## Selecting Data")
 st.markdown("""
@@ -28,14 +29,12 @@ Configure row selection with the following properties:
 """)
 
 
-
-
-editor_options  = {
+editor_options = {
     "displayIndentGuides": False,
     "wrap": "free",
     "foldStyle": "markbegin",
     "enableLiveAutocompletion": True,
-    'showGutter':True,
+    "showGutter": True,
 }
 
 custom_buttons = [
@@ -67,81 +66,88 @@ custom_buttons = [
 ]
 
 
-
 groupby = st.checkbox("Group by country and age", False)
 
 gridOptions = {
-  'rowSelection': "multiple",
-  'groupSelectsChildren':True,
-  'autoGroupColumnDef': {
-        'headerName': 'My Group',
-        'minWidth': 220,
-        'cellRendererParams': {
-            'suppressCount': False,
-            'checkbox': True,
-        }
+    "rowSelection": {"mode": "multiRow"},
+    "groupSelectsChildren": True,
+    "autoGroupColumnDef": {
+        "headerName": "My Group",
+        "minWidth": 220,
+        "cellRendererParams": {
+            "suppressCount": False,
+            "checkbox": True,
+        },
     },
-  'columnDefs': [
-    { 'field': "athlete", 'minWidth': 150,},
-    { 'field': "country", 'minWidth': 150,'rowGroup':groupby, 'hide':groupby},
-    { 'field': "age", 'maxWidth': 90,'rowGroup':groupby, 'hide':groupby},
-    { 'field': "year", 'maxWidth': 90 },
-    { 'field': "date", 'minWidth': 150 },
-    { 'field': "sport", 'minWidth': 150 },
-    { 'field': "gold" },
-    { 'field': "silver" },
-    { 'field': "bronze" },
-    { 'field': "total" },
-  ],
-  'defaultColDef': {
-    'flex': 1,
-    'minWidth': 100,
-  },
-};
-
-tabs = st.tabs(['Grid', 'GridOptions', 'AgGridReturn.selected_data', 'AgGridReturn.selected_groupedData'])
+    "columnDefs": [
+        {
+            "field": "athlete",
+            "minWidth": 150,
+        },
+        {"field": "country", "minWidth": 150, "rowGroup": groupby, "hide": groupby},
+        {"field": "age", "maxWidth": 90, "rowGroup": groupby, "hide": groupby},
+        {"field": "year", "maxWidth": 90},
+        {"field": "date", "minWidth": 150},
+        {"field": "sport", "minWidth": 150},
+        {"field": "gold"},
+        {"field": "silver"},
+        {"field": "bronze"},
+        {"field": "total"},
+    ],
+    "defaultColDef": {
+        "flex": 1,
+        "minWidth": 100,
+    },
+}
+tabs = st.tabs(
+    [
+        "Grid",
+        "GridOptions",
+        "AgGridReturn.selected_data",
+        "AgGridReturn.selected_groupedData",
+    ]
+)
 
 with tabs[0]:
-  response = AgGrid(df, gridOptions, key='grid1')
+    response = AgGrid(df, gridOptions, key="grid1")
 
 with tabs[1]:
-  text = code_editor(
-    json.dumps(gridOptions, indent=4),
-    lang="json",
-    props={'readOnly':False,  'setOptions':editor_options}, 
-    buttons=custom_buttons,
-    height='300px'
-  ).get('text', '')
+    text = code_editor(
+        json.dumps(gridOptions, indent=4),
+        lang="json",
+        props={"readOnly": False, "setOptions": editor_options},
+        buttons=custom_buttons,
+        height="300px",
+    ).get("text", "")
 
-  if text != '':
-    gridOptions = json.loads(text)
+    if text != "":
+        gridOptions = json.loads(text)
 
 
 with tabs[2]:
-  selected_data = response.selected_data
-  
-  if selected_data is None:
-    st.write('Nothing was selected!')
-  else:
-    st.write(response.selected_data)
+    selected_data = response.selected_data
+
+    if selected_data is None:
+        st.write("Nothing was selected!")
+    else:
+        st.write(response.selected_data)
 
 with tabs[3]:
-  selected_dataGroups = response.selected_dataGroups
+    selected_dataGroups = response.selected_dataGroups
 
-  if not selected_dataGroups:
-    st.write('Nothing was selected!')
-  else:
+    if not selected_dataGroups:
+        st.write("Nothing was selected!")
+    else:
+        st.text("Showing first 10 groups: {")
 
-    st.text("Showing first 10 groups: {")
+        for i in response.selected_dataGroups[:10]:
+            for k, v in i.items():
+                cols = st.columns([4, 10])
+                with cols[0]:
+                    st.text(f"{tuple(k)}\t:")
 
-    for i in response.selected_dataGroups[:10]:
-      for k, v in i.items():
-        cols = st.columns([4,10])
-        with cols[0]:
-          st.text(f"{tuple(k)}\t:")
-        
-        with cols[1]:
-          st.dataframe(v)
+                with cols[1]:
+                    st.dataframe(v)
 
-    st.text("...")
-    st.text("}")
+        st.text("...")
+        st.text("}")
