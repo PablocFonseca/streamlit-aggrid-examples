@@ -52,8 +52,9 @@ gb.configure_column(
     cellEditorParams= {
         'min': '2000-01-01',
         'max': '2029-12-31',
-        }
-    )
+        },
+    valueFormatter =  JsCode("function(params) { console.log(params); return params.value }")
+)
 
 gb.configure_grid_options(enableRangeSelection=True)
 
@@ -63,20 +64,30 @@ gb.configure_grid_options(enableRangeSelection=True)
 
 gb.configure_grid_options(enableRangeSelection=True)
 
-
+go = gb.build()
 st.markdown("""
 This example uses:   
 `agRichSelectCellEditor` on column A.  
 `agLargeTextCellEditor` on column B.  
 `agSelectCellEditor` on column c with some language options.  
 `agNumberCellEditor` on column d, limited to numbers between 0 and 100.  
-`agDateStringCellEditor` on column e:
+`agDateStringCellEditor` on column
+ e:
     
 """)
 
-response = AgGrid(
-    df,
-    gridOptions=gb.build(),
-    enable_enterprise_modules=True,
-    key='grid1'
-)
+
+tabs = st.tabs(["AgGrid", "gridOptions"])
+
+
+with tabs[0]:
+    response = AgGrid(
+        df,
+        gridOptions=go,
+        enable_enterprise_modules=True,
+        key='grid1',
+        allow_unsafe_jscode=True
+    )
+
+with tabs[1]:
+    st.write(go)

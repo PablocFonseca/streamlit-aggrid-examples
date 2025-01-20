@@ -2,9 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from st_aggrid import AgGrid, GridOptionsBuilder, StAggridTheme, AgGridTheme
+from st_aggrid import AgGrid, GridOptionsBuilder, StAggridTheme
 
-st.set_page_config(layout="wide")
+try:
+    st.set_page_config(layout="wide")
+except:
+    pass
 
 
 @st.cache_data
@@ -20,8 +23,10 @@ def get_data():
 df = get_data()
 
 st.markdown("""
-Streamlit AgGrid implements most of AgGrid [theming API](https://www.ag-grid.com/javascript-data-grid/theming/). Custom Themes should be
-specified using `StAggridTheme` class and passed to the grid _theme_ parameter or gridOptions theme key.  
+### Themes  
+Streamlit AgGrid implements most of AgGrid [theming API](https://www.ag-grid.com/javascript-data-grid/theming/). 
+Custom Themes should use `StAggridTheme` class for the specification  passed to the grid _theme_ parameter or
+ gridOptions [theme](https://www.ag-grid.com/react-data-grid/grid-options/#reference-theme) key.
 If no custom theme is supplied, the grid will try to follow current streamlit theming for accent color, font, and light/dark modes. (Try playng with Edit active theme in settings menu.)
 """)
 st.write("")
@@ -62,7 +67,6 @@ with cols[0]:
 
         with cols[1]:
             st.markdown(f"""
-                code used for custom theme:
                 ```python
                 custom_theme = (  
                     StAggridTheme(base="{themeBase}") 
@@ -73,16 +77,20 @@ with cols[0]:
                     }})  
                     .withParts({parts})  
                 )
+                
+                AgGrid(..., theme=custom_theme)
+
                 ```
             """)
 
 
 gb = GridOptionsBuilder.from_dataframe(df)
+go = gb.build()
 
 response = AgGrid(
     df,
     editable=True,
-    gridOptions=gb.build(),
+    gridOptions=go,
     data_return_mode="filtered_and_sorted",
     update_mode="no_update",
     fit_columns_on_grid_load=True,

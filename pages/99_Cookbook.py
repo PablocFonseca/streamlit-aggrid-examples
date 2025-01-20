@@ -18,6 +18,7 @@ dashboards = {
     "Columns State": os.path.join(root, "80_saving_columns_state.py"),
     "Tooltips": os.path.join(root, "81_Tooltips.py"),
     "Grid Events": os.path.join(root, "82_Handling_Grid_events.py"),
+    "Real Time Updates": os.path.join(root, "83_fetching_real_time_data.py"),
     "Classic Example": os.path.join(root, "90_main_example.py"),
 }
 
