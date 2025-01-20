@@ -1,21 +1,21 @@
 {
-  "defaultColDef": {
-    "minWidth": 5,
-    "editable": false,
-    "filter": true,
-    "resizable": true,
-    "sortable": true
-  },
-  "columnDefs": [
-    {
-      "headerName": "a",
-      "field": "a",
-      "type": ["numericColumn", "numberColumnFilter"]
+    "defaultColDef": {
+        "minWidth": 5,
+        "editable": false,
+        "filter": true,
+        "resizable": true,
+        "sortable": true,
     },
-    {
-      "headerName": "b",
-      "field": "b",
-      "type": ["numericColumn", "numberColumnFilter"]
-    }
-  ]
+    "columnDefs": [
+        {
+            "headerName": "a",
+            "field": "a",
+            "type": ["numericColumn", "numberColumnFilter"],
+        },
+        {
+            "headerName": "b",
+            "field": "b",
+            "type": ["numericColumn", "numberColumnFilter"],
+        },
+    ],
 }

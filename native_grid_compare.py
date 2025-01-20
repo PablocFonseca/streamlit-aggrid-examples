@@ -46,7 +46,9 @@ with st.expander("# st.column_config.Column"):
                 field="data.selected",
                 valueGetter="data.selected ?? false",
             ),
-            st_aggrid.column_factory.convert_st_column("widgets", column_config["widgets"]),
+            st_aggrid.column_factory.convert_st_column(
+                "widgets", column_config["widgets"]
+            ),
         ]
     }
 
@@ -59,14 +61,15 @@ data_df = pd.DataFrame(
 )
 
 column_config = {
-        "price": st.column_config.NumberColumn(
-            "Price (in USD)",
-            help="The price of the product in USD",
-            min_value=0,
-            max_value=1000,
-            step=1,
-            format="$%d",
-        )}
+    "price": st.column_config.NumberColumn(
+        "Price (in USD)",
+        help="The price of the product in USD",
+        min_value=0,
+        max_value=1000,
+        step=1,
+        format="$%d",
+    )
+}
 
 st.data_editor(
     data_df,
@@ -77,7 +80,9 @@ st.data_editor(
 
 grid_options = {
     "columnDefs": [
-        st_aggrid.column_factory.convert_st_NumberColumn("price", column_config["price"]),
+        st_aggrid.column_factory.convert_st_NumberColumn(
+            "price", column_config["price"]
+        ),
     ]
 }
 
@@ -90,10 +95,6 @@ grid_options
 
 
 AgGrid(data_df, gridOptions=grid_options, allow_unsafe_jscode=True)
-
-
-
-
 
 
 st.stop()
@@ -220,8 +221,6 @@ class ColumnDef(dict):
         """
 
         return c
-
-
 
 
 data_df = pd.DataFrame(

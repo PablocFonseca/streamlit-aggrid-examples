@@ -6,7 +6,7 @@ import requests
 
 
 url = "https://www.ag-grid.com/example-assets/master-detail-data.json"
-r  = requests.get(url)
+r = requests.get(url)
 data = r.json()
 
 df = pd.read_json(url)
@@ -57,9 +57,8 @@ gridOptions = {
                 params.successCallback(params.data.callRecords);
     }"""
         ),
-        
     },
-    "rowData": data
+    "rowData": data,
 }
 
 tabs = st.tabs(["Grid", "Underlying Data", "Grid Options", "Grid Return"])

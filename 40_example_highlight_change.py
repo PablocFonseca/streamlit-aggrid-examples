@@ -53,12 +53,10 @@ ag = AgGrid(data, gridOptions=gb.build(),  key='grid1', allow_unsafe_jscode=True
 """
 )
 
-tabs = st.tabs(["AgGrid", "gridOptions","Response Data"])
+tabs = st.tabs(["AgGrid", "gridOptions", "Response Data"])
 
 with tabs[0]:
-    ag = AgGrid(
-        data, gridOptions=go, key="grid1", allow_unsafe_jscode=True
-    )
+    ag = AgGrid(data, gridOptions=go, key="grid1", allow_unsafe_jscode=True)
 
 with tabs[1]:
     st.dataframe(ag["data"])
