@@ -2,19 +2,21 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import pandas as pd
 
+
 @st.cache_data
 def get_data():
-  return  pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+    return pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+
 
 df = get_data()
 
 try:
-  st.set_page_config(layout='wide')
+    st.set_page_config(layout="wide")
 except:
-  pass
+    pass
 
 st.markdown(
-"""
+    """
 ### Injecting JsCode
 Some properties on gridOptions receive javascript functions. You can inject JavaScript code by using the JsCode object.  
 For instance the [documentation](https://ag-grid.com/javascript-data-grid/cell-styles/#reference-styling-cellStyle) of `cellStyle` columnOption
@@ -43,29 +45,31 @@ AgGrid(data=df, gridOptions=grid_options, allow_unsafe_jscode=True, key='grid1')
 )
 
 st.info(
-""" 
+    """ 
 ##### ⚠ Note! 
-When using JsCode you need to call AgGrid with `allow_unsafe_jscode=True`.""")
+When using JsCode you need to call AgGrid with `allow_unsafe_jscode=True`."""
+)
 
 cellStyle = JsCode(
-   r"""
+    r"""
     function(cellClassParams) {
          if (cellClassParams.data.gold > 3) {
             return {'backgroundColor': 'gold'}
          }
          return {};
         }
-   """)
+   """
+)
 
 grid_builder = GridOptionsBuilder.from_dataframe(df)
 grid_options = grid_builder.build()
 
-grid_options['defaultColDef']['cellStyle'] = cellStyle
+grid_options["defaultColDef"]["cellStyle"] = cellStyle
 
-tabs = st.tabs(['Grid', 'gridOptions'])
+tabs = st.tabs(["Grid", "gridOptions"])
 
 with tabs[0]:
-    AgGrid(data=df, gridOptions=grid_options, allow_unsafe_jscode=True, key='grid1')
+    AgGrid(data=df, gridOptions=grid_options, allow_unsafe_jscode=True, key="grid1")
 
 with tabs[1]:
-   st.write(grid_options)
+    st.write(grid_options)

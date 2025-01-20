@@ -22,44 +22,37 @@ gb.configure_column(
 
 gb.configure_column(
     "b",
-    cellEditor='agLargeTextCellEditor',
-    cellEditorPopup= True,
-    cellEditorParams= {
-        'maxLength': 100
-    }
+    cellEditor="agLargeTextCellEditor",
+    cellEditorPopup=True,
+    cellEditorParams={"maxLength": 100},
 )
 
 gb.configure_column(
     "c",
-    cellEditor= 'agSelectCellEditor',
-    cellEditorParams= {
-    'values': ['English', 'Spanish', 'French', 'Portuguese', '(other)'],
-        }
+    cellEditor="agSelectCellEditor",
+    cellEditorParams={
+        "values": ["English", "Spanish", "French", "Portuguese", "(other)"],
+    },
 )
 
 gb.configure_column(
-    "d",
-    cellEditor= 'agNumberCellEditor',
-    cellEditorParams= {
-        'min': 0,
-        'max': 100
-    })
+    "d", cellEditor="agNumberCellEditor", cellEditorParams={"min": 0, "max": 100}
+)
 
 
 gb.configure_column(
     "e",
-    cellEditor= 'agDateCellEditor',
-    cellEditorParams= {
-        'min': '2000-01-01',
-        'max': '2029-12-31',
-        },
-    valueFormatter =  JsCode("function(params) { console.log(params); return params.value }")
+    cellEditor="agDateCellEditor",
+    cellEditorParams={
+        "min": "2000-01-01",
+        "max": "2029-12-31",
+    },
+    valueFormatter=JsCode(
+        "function(params) { console.log(params); return params.value }"
+    ),
 )
 
 gb.configure_grid_options(enableRangeSelection=True)
-
-
-
 
 
 gb.configure_grid_options(enableRangeSelection=True)
@@ -85,8 +78,8 @@ with tabs[0]:
         df,
         gridOptions=go,
         enable_enterprise_modules=True,
-        key='grid1',
-        allow_unsafe_jscode=True
+        key="grid1",
+        allow_unsafe_jscode=True,
     )
 
 with tabs[1]:

@@ -49,7 +49,7 @@ The valueGetter is set without a JsCode wrapper, because AgGrid supports [expres
 """
 )
 
-tabs = st.tabs(["AgGrid", "gridOptions","Response Data"])
+tabs = st.tabs(["AgGrid", "gridOptions", "Response Data"])
 
 with tabs[0]:
     ag = AgGrid(
@@ -61,9 +61,8 @@ with tabs[0]:
         reload_data=reload_data,
     )
 
-with tabs[1]: 
+with tabs[1]:
     st.write(go)
 
 with tabs[2]:
     st.dataframe(ag.data)
-

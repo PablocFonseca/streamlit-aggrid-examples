@@ -5,14 +5,15 @@ import pandas as pd
 
 @st.cache_data
 def get_data():
-  r = pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
-  return r
+    r = pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json")
+    return r
+
 
 df = get_data()
 
 
-#reference to onCellClicked handling functions here: https://ag-grid.com/javascript-data-grid/grid-events/#reference-selection-cellDoubleClicked
-#This example function logs the params to the console and alerts which row/column was clicked.
+# reference to onCellClicked handling functions here: https://ag-grid.com/javascript-data-grid/grid-events/#reference-selection-cellDoubleClicked
+# This example function logs the params to the console and alerts which row/column was clicked.
 onCellDoubleClickedHandler = JsCode(r"""
     function (params){
       console.log(params);
@@ -64,22 +65,24 @@ st.markdown("""
 
 gd = GridOptionsBuilder().from_dataframe(df)
 
-#creates a virtual column to handle click data
+# creates a virtual column to handle click data
 gd.configure_column("doubleClicked", "doubleClicked Timestamp")
 
 gd.configure_grid_options(onCellDoubleClicked=onCellDoubleClickedHandler)
 
 go = gd.build()
 
-tabs =  st.tabs(["Grid", "Response"])
+tabs = st.tabs(["Grid", "Response"])
 
 
 with tabs[0]:
-  response = AgGrid(df, go, allow_unsafe_jscode=True)
+    response = AgGrid(df, go, allow_unsafe_jscode=True)
 
 with tabs[1]:
-  st.write(response.data)
+    st.write(response.data)
 
-if 'doubleClicked' in response.data.columns:
-  lastDoubleClickedTs = pd.to_datetime(response.data["doubleClicked"], unit='ms').max()
-  st.write(f"Last double click was {lastDoubleClickedTs} UTC")
+if "doubleClicked" in response.data.columns:
+    lastDoubleClickedTs = pd.to_datetime(
+        response.data["doubleClicked"], unit="ms"
+    ).max()
+    st.write(f"Last double click was {lastDoubleClickedTs} UTC")
