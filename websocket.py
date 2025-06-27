@@ -13,7 +13,7 @@ function onGridReady(params) {
             const data = [{
                 ticker: ticker.toUpperCase(),
                 lastQuoteTimestamp: new Date(trade.T).toLocaleString(),
-                lastQuote: trade.p
+                lastQuote: Number(trade.p)
             }];
             const rowNode = window.gridApi.getRowNode(ticker.toUpperCase());
             if (!rowNode) {
@@ -100,11 +100,12 @@ Optionally, enable automatic app refresh with a configurable interval.
     grid_options = {
         "columnDefs": [
             {"field": "ticker", "headerName": "Ticker"},
-            {"field": "lastQuoteTimestamp", "headerName": "Last Quote Timestamp"},
+            {"field": "lastQuoteTimestamp", "headerName": "Last Quote Timestamp",  "type":["dateColumnFilter"]},
             {
                 "field": "lastQuote",
                 "headerName": "Last Quote",
                 "enableCellChangeFlash": True,
+                "type":["numericColumn", "numberColumnFilter"]
             },
         ],
         "defaultColDef": {"sortable": True, "filter": True, "resizable": True},
