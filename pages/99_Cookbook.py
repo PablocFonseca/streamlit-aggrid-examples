@@ -10,7 +10,7 @@ root = os.path.join(os.path.dirname(__file__), "..")
 
 dashboards = {
     "Custom Cell Rendererers": os.path.join(root, "20_cell_renderer_class_example.py"),
-    "Websockets": os.path.join(root, "websockets.py"),
+    "Websockets": os.path.join(root, "websocket.py"),
     "Virtual Columns": os.path.join(root, "30_virtual_columns.py"),
     "Highlight Editions": os.path.join(root, "40_example_highlight_change.py"),
     "Themes & Pre-Selection": os.path.join(root, "50_themes_and_pre_selection.py"),
