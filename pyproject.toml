@@ -11,8 +11,6 @@ python = ">=3.10"
 streamlit-aggrid = ">=1.1.6"
 streamlit-code-editor = "^0.1.12"
 
-[tool.poetry.dev-dependencies]
-
 [tool.poetry.group.dev.dependencies]
 
 [build-system]
