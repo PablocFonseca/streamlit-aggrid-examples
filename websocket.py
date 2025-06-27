@@ -122,7 +122,7 @@ Optionally, enable automatic app refresh with a configurable interval.
         fit_columns_on_grid_load=True,
         allow_unsafe_jscode=True,
         update_on=update_on,
-        key=f"WSGrid1_{refresh_interval}_{enable_refresh}",
+        key=f"WSGrid1_{refresh_interval}_{enable_refresh}_{selected_tickers}",
     )
 
     with st.expander("Page Refresh Counter", expanded=True):
