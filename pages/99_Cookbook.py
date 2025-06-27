@@ -25,7 +25,10 @@ dashboards = {
 }
 
 index = 0
-choice_from_url = query_params = st.query_params.get("example", None)
+query_params = {k.lower():v for k,v in st.query_params.items()}
+choice_from_url = query_params.get("example", None)
+
+
 if choice_from_url:
     index = list(dashboards.keys()).index(choice_from_url)
 
@@ -40,3 +43,6 @@ with open(path, encoding="utf-8") as code:
     with st.expander("Code for this example:"):
         st.markdown(f"""``` python
 {c}```""")
+st.query_params.clear()
+st.query_params['example'] = choice
+
