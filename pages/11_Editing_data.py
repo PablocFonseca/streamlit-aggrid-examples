@@ -41,9 +41,12 @@ if you want to make only some columns editable, you'll need to manually create t
 st.info("""
 ### ⚠ Grid behaviour when editing data.
 If the grid has a fixed key, it will update whenever underlying dataframe updates.
-However, if the grid is "dirty" (any data has been edited) it will __stop updating and ignore any change on data__.   
-Return object will now only hold the modified data. 
-To 'clean' the grid again, it needs to be destroied and recreated, by changing the key parameter or reloading the page.""")
+However, if the grid is "dirty" (any data has been edited) it will __stop updating and ignore any change on data__.
+Return object will now only hold the modified data.
+To 'clean' the grid again, it needs to be destroied and recreated, by changing the key parameter or reloading the page.
+
+**Note:** This is the default behavior (`server_sync_strategy='client_wins'`). You can change this by setting
+`server_sync_strategy='server_wins'` to make server data always overwrite the grid, including edited cells.""")
 
 st.markdown("""
 On the example below the grid is fully editable. Modified data is returned on `grid_return.data`.
