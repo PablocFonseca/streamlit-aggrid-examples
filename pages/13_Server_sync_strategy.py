@@ -2,7 +2,6 @@ import streamlit as st
 from st_aggrid import AgGrid, AgGridReturn
 import pandas as pd
 
-st.set_page_config(layout='centered')
 @st.cache_data
 def get_data():
     return pd.read_json("https://www.ag-grid.com/example-assets/olympic-winners.json").loc[:, ['age','athlete', 'country']]
