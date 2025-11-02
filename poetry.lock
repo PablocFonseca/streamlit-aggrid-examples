@@ -1111,14 +1111,14 @@ snowflake = ["snowflake-connector-python (>=3.3.0) ; python_version < \"3.12\"",
 
 [[package]]
 name = "streamlit-aggrid"
-version = "1.1.6"
+version = "1.2.0"
 description = "Streamlit component implementation of ag-grid"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "streamlit_aggrid-1.1.6-py3-none-any.whl", hash = "sha256:bd48861c656fc24bc24be3038335a500ec9915acd4466ae2eb3e78e5f6e43aa9"},
-    {file = "streamlit_aggrid-1.1.6.tar.gz", hash = "sha256:72c1dcfc7a8bc32b1fd34b6d68ed52ed710e849b1eb0a8094af6c1a8fa9fbcdb"},
+    {file = "streamlit_aggrid-1.2.0-py3-none-any.whl", hash = "sha256:f9c40b27172b5673719a8b2c8144444e39a26195b11f45887b093c317840e360"},
+    {file = "streamlit_aggrid-1.2.0.tar.gz", hash = "sha256:c49d380b2361ed5daf236ffa7e7140a3854bbccb4a6c380243237636039e3abb"},
 ]
 
 [package.dependencies]
@@ -1280,4 +1280,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "b713b25c02b6b04d7793714c353d3c9333d6658e9706098022a58a2b692ba082"
+content-hash = "d3da7c65e21f2c18f7d0aebcb4c4c83ce18b82e7d0b2a9c9fcdb6d00112583ba"
