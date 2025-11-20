@@ -78,7 +78,7 @@ grid_options = grid_builder.build()
 tabs = st.tabs(["Grid", "gridOptions"])
 
 with tabs[0]:
-    AgGrid(data=df, gridOptions=grid_options, key="grid2")
+    AgGrid(data=df, gridOptions=grid_options, key="grid2", enable_enterprise_modules=True)
 
 with tabs[1]:
     st.markdown("*gridOptions* =")

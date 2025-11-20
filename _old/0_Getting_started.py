@@ -54,7 +54,7 @@ tabs = st.tabs(
 )
 
 with tabs[0]:
-    grid_return = AgGrid(df)
+    grid_return = AgGrid(df, update_mode="MODEL_CHANGED")
 
 with tabs[1]:
     st.write(grid_return.grid_options)

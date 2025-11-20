@@ -109,7 +109,7 @@ tabs = st.tabs(
 )
 
 with tabs[0]:
-    response = AgGrid(df, gridOptions, key="grid1")
+    response = AgGrid(df, gridOptions, key="grid1", enable_enterprise_modules=True)
 
 with tabs[1]:
     text = code_editor(

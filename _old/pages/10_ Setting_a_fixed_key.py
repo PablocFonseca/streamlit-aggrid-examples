@@ -36,8 +36,11 @@ left_col, right_col = st.columns(2)
 
 with left_col:
     # for a strange reason dataframe is having dtypes changed. Investigate
-    left_grid = AgGrid(sample_data)
+    sleft_grid = AgGrid(sample_data)
+    
 
 
 with right_col:
+    key = str(pd.util.hash_pandas_object(sample_data).sum())
+    print(key)
     right_grid = AgGrid(sample_data, key="right_grid")
