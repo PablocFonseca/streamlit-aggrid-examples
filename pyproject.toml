@@ -1,0 +1,30 @@
+[project]
+name = "streamlit-aggrid-examples"
+version = "2.0.0"
+description = "Streamlit AgGrid Examples"
+authors = [{name = "Pablo Fonseca"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "streamlit-aggrid"
+]
+
+[tool.poetry]
+name = "streamlit-aggrid-examples"
+version = "2.0.0"
+description = "Streamlit AgGrid Examples"
+authors = ["Pablo Fonseca <email@example.com>"]
+package-mode = false
+packages = []
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+streamlit-aggrid = "*"
+
+[tool.poetry.group.dev.dependencies]
+fastapi = "^0.120.4"
+uvicorn = "^0.38.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

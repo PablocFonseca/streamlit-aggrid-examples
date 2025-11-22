@@ -1,3 +1,8 @@
 backserver/dummy_data.parquet
 backserver/__pycache__/backend_server_side.cpython-313.pyc
 .DS_Store
+_old/*
+.vscode/*
+.devcontainer/*
+*.pyc
+*.parquet
