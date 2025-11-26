@@ -1,10 +1,52 @@
 import streamlit as st
 from components.ui_components import inject_banner_styles, render_banner, render_premium_button
 
+# Global CSS for sidebar navigation
+st.markdown("""
+<style>
+    /* Sidebar navigation container */
+    .sidebar-nav-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.0rem;
+    }
+
+    /* Sidebar navigation link styling */
+    .sidebar-nav-link {
+        display: block;
+        padding: 0.2rem 0.75rem;
+        color: var(--text-color);
+        text-decoration: none !important;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+    }
+
+    .sidebar-nav-link:hover {
+        background-color: var(--secondary-background-color);
+        border-left-color: var(--primary-color);
+        text-decoration: none !important;
+        padding-left: 1rem;
+        color: var(--text-color);
+    }
+
+    .sidebar-nav-section {
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-color-muted);
+        letter-spacing: 0.05em;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 pages = {
     "": [
         st.Page("content/landing.py", title="Streamlit-Aggrid", icon="🏠"),
         st.Page("content/getting_started.py", title="Getting Started", icon="🚀"),
+        st.Page("content/support.py", title="Support the Project", icon="💝"),
     ],
     "📍 User Guide": [
         st.Page("content/docs/10_configuration.py", title="Basic Configuration", icon="⚙️"),

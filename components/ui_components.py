@@ -109,7 +109,7 @@ export default function(component) {
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'rc-overflow-item';
         buttonContainer.style.opacity = '1';
-        buttonContainer.style.order = '4'; // After demos (order 3)
+        buttonContainer.style.order = '5'; // After demos (order 3)
         buttonContainer.id = 'premium-button-container';
 
         // Create inner structure similar to nav items

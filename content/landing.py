@@ -284,17 +284,17 @@ def main():
   },
     }
 
-    AgGrid(
+    r = AgGrid(
         df,
         gridOptions=grid_options,
         height=400,
         theme="alpine",
         allow_unsafe_jscode=True,
         enable_enterprise_modules="enterprise+AgCharts",
-        update_mode="NO_UPDATE",
+        update_mode="MODEL_CHANGED",
         use_json_serialization=True,
+        debug=True
     )
-
-
+    
 if __name__ == "__main__":
     main()
