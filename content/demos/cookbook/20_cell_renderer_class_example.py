@@ -117,31 +117,8 @@ st.title("Custom cellRenderer Class Example")
 st.markdown(
     f"""
 This example uses a custom class `BtnCellRenderer`, that implements [ICellRendererComp](https://www.ag-grid.com/javascript-data-grid/component-cell-renderer/#custom-components) interface.
-"""
-)
 
-with st.expander("*BtnCellRenderer* implementation", expanded=False):
-    st.markdown(
-        f"""
-    ```javascript
-    {jsfnc}
-    ```
-    """
-    )
-
-
-st.markdown(
-    """
-The custom renderer is then added as an extra column on gridOptions:
-
-```python
-grid_options['columnDefs'].append({
-    "field": "clicked",
-    "headerName": "Clicked",
-    "cellRenderer": BtnCellRenderer
-})
-```
-clicked cells will appear in the response dataframe
+The custom renderer is added as an extra column on gridOptions. Clicked cells will appear in the response dataframe.
 """
 )
 
@@ -169,3 +146,76 @@ if clicked.empty:
     st.write("Nothing was clicked")
 else:
     st.write(clicked)
+
+with st.expander("Show code", expanded=False):
+    st.markdown("""
+### BtnCellRenderer Implementation
+
+The custom button cell renderer class:
+""")
+    st.markdown(
+        f"""
+```javascript
+{jsfnc}
+```
+"""
+    )
+    st.markdown("""
+### Python Code
+
+Adding the custom renderer to the grid:
+""")
+    st.code("""
+from st_aggrid import AgGrid, JsCode
+import pandas as pd
+
+# Define the custom button cell renderer
+BtnCellRenderer = JsCode('''
+class BtnCellRenderer {
+    init(params) {
+        this.params = params;
+        this.eGui = document.createElement('button');
+        this.eGui.innerHTML = 'Click Me!';
+        this.eGui.onclick = () => {
+            params.setValue("clicked");
+        };
+    }
+    getGui() {
+        return this.eGui;
+    }
+    refresh(params) {
+        return false;
+    }
+}
+''')
+
+# Create sample data
+df = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Charlie'],
+    'Age': [25, 30, 35]
+})
+
+# Build grid options
+gb = GridOptionsBuilder.from_dataframe(df)
+gridOptions = gb.build()
+
+# Add custom button column
+gridOptions['columnDefs'].append({
+    "field": "clicked",
+    "headerName": "Clicked",
+    "cellRenderer": BtnCellRenderer
+})
+
+# Display grid
+response = AgGrid(
+    df,
+    gridOptions=gridOptions,
+    allow_unsafe_jscode=True
+)
+
+# Show clicked rows
+clicked = response.data[response.data.clicked == "clicked"]
+st.write(clicked)
+""", language="python")
+
+st.divider()

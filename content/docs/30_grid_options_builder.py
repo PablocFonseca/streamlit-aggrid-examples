@@ -6,7 +6,7 @@ API documentation for GridOptionsBuilder methods with MultiIndex example.
 """
 
 import streamlit as st
-from streamlit_aggrid import AgGrid, GridOptionsBuilder, get_hide_expanders_css
+from streamlit_aggrid import AgGrid, GridOptionsBuilder 
 import pandas as pd
 import numpy as np
 
@@ -35,7 +35,7 @@ with st.sidebar:
     <div class="sidebar-nav-container">
         <a href="#overview" class="sidebar-nav-link">Overview</a>
         <a href="#complete-example" class="sidebar-nav-link">Example</a>
-        <div class="sidebar-nav-section" style="text-transform: none !important"><code style="text-transform: capitalize">GridOptionsBuilder</code> API</div>
+        <div class="sidebar-nav-section" style="text-transform: none !important"><span style="text-transform: capitalize">GridOptionsBuilder API</span></div>
         <a href="#from-dataframe" class="sidebar-nav-link">from_dataframe()</a>
         <a href="#configure-column" class="sidebar-nav-link">configure_column()</a>
         <a href="#configure-default-column" class="sidebar-nav-link">configure_default_column()</a>
@@ -119,6 +119,37 @@ def section_complete_example():
     data = np.random.randint(100, 1000, size=(len(index), len(columns)))
     df = pd.DataFrame(data, index=index, columns=columns)
 
+
+    # Build grid
+    gb = GridOptionsBuilder.from_dataframe(df, parse_multi_index=True)
+    gb.configure_default_column(resizable=True, filterable=True, sortable=True)
+
+    df_reset = df.reset_index()
+    first_data_col = str(df_reset.columns[3])
+    gb.configure_column(first_data_col, checkboxSelection=True, headerCheckboxSelection=True)
+
+    gb.configure_grid_options(
+        rowSelection='multiple',
+        suppressRowClickSelection=True
+    )
+
+    gridOptions = gb.build()
+    result = AgGrid(
+        df_reset,
+        gridOptions=gridOptions,
+        height=500,
+        theme='streamlit',
+        enable_enterprise_modules=True,
+        key='multiindex_demo',
+        isolate_styles=False
+    )
+
+    # Show selection
+    if result.selected_rows is not None and len(result.selected_rows) > 0:
+        st.success(f"Selected {len(result.selected_rows)} rows")
+        with st.expander("View selected rows"):
+            st.dataframe(pd.DataFrame(result.selected_rows))
+
     with st.expander("Show code", expanded=False):
         st.code("""
 from streamlit_aggrid import AgGrid, GridOptionsBuilder, get_hide_expanders_css
@@ -175,41 +206,6 @@ if result.selected_rows is not None and len(result.selected_rows) > 0:
     st.write(f"Selected {len(result.selected_rows)} rows")
     st.dataframe(pd.DataFrame(result.selected_rows))
 """, language="python")
-
-    st.markdown("**Output:**")
-
-    # Apply CSS
-    st.markdown(get_hide_expanders_css(), unsafe_allow_html=True)
-
-    # Build grid
-    gb = GridOptionsBuilder.from_dataframe(df, parse_multi_index=True)
-    gb.configure_default_column(resizable=True, filterable=True, sortable=True)
-
-    df_reset = df.reset_index()
-    first_data_col = str(df_reset.columns[3])
-    gb.configure_column(first_data_col, checkboxSelection=True, headerCheckboxSelection=True)
-
-    gb.configure_grid_options(
-        rowSelection='multiple',
-        suppressRowClickSelection=True
-    )
-
-    gridOptions = gb.build()
-    result = AgGrid(
-        df_reset,
-        gridOptions=gridOptions,
-        height=500,
-        theme='streamlit',
-        enable_enterprise_modules=True,
-        key='multiindex_demo',
-        isolate_styles=False
-    )
-
-    # Show selection
-    if result.selected_rows is not None and len(result.selected_rows) > 0:
-        st.success(f"Selected {len(result.selected_rows)} rows")
-        with st.expander("View selected rows"):
-            st.dataframe(pd.DataFrame(result.selected_rows))
 
     st.divider()
 

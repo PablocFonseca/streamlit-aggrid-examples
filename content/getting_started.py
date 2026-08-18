@@ -10,8 +10,6 @@ import streamlit as st
 from st_aggrid import AgGrid
 import pandas as pd
 
-st.set_page_config(page_title="Getting Started", layout="centered")
-
 # Sidebar navigation/index
 with st.sidebar:
     st.title("Getting Started")
@@ -47,6 +45,16 @@ formatting (e.g., right-aligned numbers, formatted dates).
 # Example 1: DataFrame Input
 st.subheader("DataFrame Input", anchor="dataframe-input")
 
+df = pd.DataFrame(
+    {
+        "Name": ["Alice", "Bob", "Charlie"],
+        "Age": [25, 30, 35],
+        "Score": [92.5, 87.3, 95.1],
+    }
+)
+
+AgGrid(df, key="example1", height=200)
+
 with st.expander("Show code", expanded=False):
     st.code(
         """
@@ -65,15 +73,7 @@ AgGrid(df)
         language="python",
     )
 
-df = pd.DataFrame(
-    {
-        "Name": ["Alice", "Bob", "Charlie"],
-        "Age": [25, 30, 35],
-        "Score": [92.5, 87.3, 95.1],
-    }
-)
-
-AgGrid(df, key="example1", height=200)
+st.divider()
 
 # Example 2: JSON Data
 st.subheader("JSON Data", anchor="json-data")
@@ -81,6 +81,9 @@ st.subheader("JSON Data", anchor="json-data")
 st.markdown("""
 You can work with JSON data either from external files or in-memory as Python lists of dictionaries.
 """)
+
+json_data = Path(__file__).parent.parent.joinpath("assets", "olympic-winners.json")
+AgGrid(json_data, height=300, key="example2")
 
 with st.expander("Show code", expanded=False):
     st.code(
@@ -130,8 +133,7 @@ AgGrid("./olympic-winners.json")
         language="python",
     )
 
-json_data = Path(__file__).parent.parent.joinpath("assets", "olympic-winners.json")
-AgGrid(json_data, height=300, key="example2")
+st.divider()
 
 # Example 3: Custom Grid Options
 st.subheader("Custom Grid Options", anchor="custom-grid-options")
@@ -153,67 +155,6 @@ st.info("""
 - **Notice the striped rows** with alternating background colors for better readability
 - **See custom header names** that differ from the actual column names (e.g., "Full Name" instead of "Name")
 """)
-
-with st.expander("Show code", expanded=False):
-    st.code(
-        """
-from st_aggrid import AgGrid
-import pandas as pd
-
-df = pd.DataFrame({
-    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
-    'Age': [25, 30, 35, 28, 42],
-    'Score': [92.5, 87.3, 95.1, 88.0, 91.2],
-    'Grade': ['A', 'B', 'A', 'B', 'A']
-})
-
-gridOptions = {
-    'columnDefs': [
-        {'field': 'Name', 'headerName': 'Full Name'},
-        {'field': 'Age', 'headerName': 'Age', 'type': 'numericColumn'},
-        {'field': 'Score', 'headerName': 'Test Score', 'type': 'numericColumn',
-         'valueFormatter': 'value.toFixed(1)'},
-        {'field': 'Grade', 'headerName': 'Letter Grade'},
-    ],
-    'defaultColDef': {
-        'editable': True,
-        'sortable': True,
-        'filter': True,
-        'resizable': True,
-    },
-    'statusBar': {
-        'statusPanels': [
-            {'statusPanel': 'agTotalRowCountComponent', 'align': 'left'},
-            {'statusPanel': 'agFilteredRowCountComponent'},
-            {'statusPanel': 'agSelectedRowCountComponent'},
-            {'statusPanel': 'agAggregationComponent'}
-        ]
-    },
-    'sideBar': {
-        'toolPanels': ['columns', 'filters']
-    },
-    'rowClassRules': {
-        'even-row': 'node.rowIndex % 2 === 0',
-        'odd-row': 'node.rowIndex % 2 !== 0'
-    }
-}
-
-custom_css = \"\"\"
-    .even-row {
-        background-color: var(--st-background-color);
-    }
-    .odd-row {
-        background-color: var(--st-secondary-background-color);
-    }
-\"\"\"
-
-st.write(f"<style>{custom_css}</style>", unsafe_allow_html=True)
-
-AgGrid(df, gridOptions=gridOptions, custom_css=custom_css,
-       isolate_styles=False, enable_enterprise_modules=True)
-""",
-        language="python",
-    )
 
 df_custom = pd.DataFrame(
     {
@@ -276,6 +217,69 @@ AgGrid(
     enable_enterprise_modules=True,
     isolate_styles=False
 )
+
+with st.expander("Show code", expanded=False):
+    st.code(
+        """
+from st_aggrid import AgGrid
+import pandas as pd
+
+df = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    'Age': [25, 30, 35, 28, 42],
+    'Score': [92.5, 87.3, 95.1, 88.0, 91.2],
+    'Grade': ['A', 'B', 'A', 'B', 'A']
+})
+
+gridOptions = {
+    'columnDefs': [
+        {'field': 'Name', 'headerName': 'Full Name'},
+        {'field': 'Age', 'headerName': 'Age', 'type': 'numericColumn'},
+        {'field': 'Score', 'headerName': 'Test Score', 'type': 'numericColumn',
+         'valueFormatter': 'value.toFixed(1)'},
+        {'field': 'Grade', 'headerName': 'Letter Grade'},
+    ],
+    'defaultColDef': {
+        'editable': True,
+        'sortable': True,
+        'filter': True,
+        'resizable': True,
+    },
+    'statusBar': {
+        'statusPanels': [
+            {'statusPanel': 'agTotalRowCountComponent', 'align': 'left'},
+            {'statusPanel': 'agFilteredRowCountComponent'},
+            {'statusPanel': 'agSelectedRowCountComponent'},
+            {'statusPanel': 'agAggregationComponent'}
+        ]
+    },
+    'sideBar': {
+        'toolPanels': ['columns', 'filters']
+    },
+    'rowClassRules': {
+        'even-row': 'node.rowIndex % 2 === 0',
+        'odd-row': 'node.rowIndex % 2 !== 0'
+    }
+}
+
+custom_css = \"\"\"
+    .even-row {
+        background-color: var(--st-background-color);
+    }
+    .odd-row {
+        background-color: var(--st-secondary-background-color);
+    }
+\"\"\"
+
+st.write(f"<style>{custom_css}</style>", unsafe_allow_html=True)
+
+AgGrid(df, gridOptions=gridOptions, custom_css=custom_css,
+       isolate_styles=False, enable_enterprise_modules=True)
+""",
+        language="python",
+    )
+
+st.divider()
 
 # Learn More Section
 st.header("Learn More", anchor="learn-more")

@@ -178,10 +178,6 @@ if st.session_state.validation_errors:
     for error in st.session_state.validation_errors:
         st.warning(error)
 
-# Display current data types
-with st.expander("Data Types Information"):
-    st.code(st.session_state.order_data.dtypes)
-
 # Render the grid
 st.subheader("Order Entry Grid")
 st.markdown(
@@ -199,6 +195,66 @@ grid_result = AgGrid(
     theme="streamlit",
     allow_unsafe_jscode=True,
 )
+
+# Display current data types
+with st.expander("Data Types Information"):
+    st.code(st.session_state.order_data.dtypes)
+
+with st.expander("Show code", expanded=False):
+    st.code("""
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+import pandas as pd
+import streamlit as st
+
+# Initialize session state with order data
+if "order_data" not in st.session_state:
+    num_rows = 5
+    st.session_state.order_data = pd.DataFrame({
+        "product_name": pd.Series([None] * num_rows, dtype="string"),
+        "quantity": pd.Series([pd.NA] * num_rows, dtype="Int64"),
+        "unit_price": pd.Series([pd.NA] * num_rows, dtype="Float64"),
+        "total_price": pd.Series([0.0] * num_rows, dtype="Float64"),
+        "discount_pct": pd.Series([0] * num_rows, dtype="Int64"),
+        "final_price": pd.Series([0.0] * num_rows, dtype="Float64"),
+    })
+
+# Define callback for automatic calculations
+def validate_and_calculate(response):
+    if response and response.data is not None:
+        df = response.data
+        # Calculate total_price = quantity * unit_price
+        df["total_price"] = df["quantity"].fillna(0) * df["unit_price"].fillna(0)
+        # Calculate final_price with discount
+        df["final_price"] = df["total_price"] * (1 - df["discount_pct"].fillna(0) / 100)
+        st.session_state.order_data = df
+
+# Build grid options
+grid_options = GridOptionsBuilder.from_dataframe(st.session_state.order_data)
+
+# Configure editable columns
+grid_options.configure_column("product_name", editable=True, header_name="Product Name")
+grid_options.configure_column("quantity", editable=True, type=["numericColumn"])
+grid_options.configure_column("unit_price", editable=True, type=["numericColumn"])
+grid_options.configure_column("total_price", editable=False, type=["numericColumn"])
+grid_options.configure_column("discount_pct", editable=True, type=["numericColumn"])
+grid_options.configure_column("final_price", editable=False, type=["numericColumn"])
+
+# Configure selection
+grid_options.configure_selection(selection_mode="multiple", use_checkbox=True)
+
+# Display the grid
+grid_result = AgGrid(
+    st.session_state.order_data,
+    gridOptions=grid_options.build(),
+    key="order_grid",
+    callback=validate_and_calculate,
+    server_sync_strategy="server_wins",
+    height=300,
+    allow_unsafe_jscode=True
+)
+""", language="python")
+
+st.divider()
 
 # Action buttons
 col1, col2, col3 = st.columns([1, 1, 3])

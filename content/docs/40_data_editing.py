@@ -13,6 +13,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from streamlit_aggrid import AgGridReturn
+
 st.set_page_config(page_title="Data Editing & Cell Updates", layout="wide")
 
 # ============================================================================
@@ -20,12 +22,9 @@ st.set_page_config(page_title="Data Editing & Cell Updates", layout="wide")
 # ============================================================================
 SECTIONS = {
     'overview': True,
-    'basic_editable_grid': False,
-    'edit_types': False,
+    'basic_editable_grid': True,
     'cell_editors': True,
-    'change_detection': False,
-    'server_sync_strategy': False,
-    'validation': False,
+    'server_sync_strategy': True,
 }
 
 # Sidebar navigation/index
@@ -35,19 +34,17 @@ with st.sidebar:
     <div class="sidebar-nav-container">
         <a href="#overview" class="sidebar-nav-link">Overview</a>
         <a href="#basic-editable-grid" class="sidebar-nav-link">Basic Editable Grid</a>
-        <a href="#edit-types" class="sidebar-nav-link">Edit Types</a>
         <a href="#cell-editors" class="sidebar-nav-link">Cell Editors</a>
-        <a href="#change-detection" class="sidebar-nav-link">Change Detection</a>
         <a href="#server-sync-strategy" class="sidebar-nav-link">Server Sync Strategy</a>
-        <a href="#validation" class="sidebar-nav-link">Data Validation</a>
     </div>
     ''', unsafe_allow_html=True)
 
 st.title("Data Editing & Cell Updates")
 
 st.markdown("""
-This guide demonstrates how to make your AgGrid editable and handle user modifications.
-You'll learn about different editor types, validation, and how to track changes.
+AG Grid provides powerful cell editing capabilities that allow users to modify data directly within the grid.
+This guide covers the fundamentals of making grids editable, configuring different cell editor types,
+understanding server synchronization strategies, and implementing validation rules.
 """)
 
 # Create sample data
@@ -110,13 +107,21 @@ def section_overview():
     st.header("Overview", anchor="overview")
 
     st.markdown("""
-    AG Grid provides powerful cell editing capabilities that allow users to modify data directly in the grid.
-    Key features include:
-    - **Multiple editor types**: Text, number, dropdown, checkbox, date pickers, and custom editors
-    - **Validation**: Client-side validation to ensure data integrity
-    - **Change tracking**: Monitor which cells have been modified
-    - **Server sync strategies**: Control how edits interact with server data updates
-    - **Events**: Respond to edit events for real-time processing
+    Cell editing is a fundamental feature that transforms static data grids into interactive data management tools.
+    Understanding the editing capabilities available in AG Grid enables you to build sophisticated data entry
+    and modification interfaces.
+
+    **Key Capabilities**
+
+    AG Grid's editing system provides:
+
+    - **Multiple editor types** — Text, number, dropdown, checkbox, date pickers, and custom editors
+    - **Validation** — Client-side validation to ensure data integrity before commits
+    - **Change tracking** — Monitor which cells have been modified during the session
+    - **Server sync strategies** — Control how local edits interact with server data updates
+    - **Event handling** — Respond to edit events for real-time processing and side effects
+
+    The following sections demonstrate these capabilities with practical examples.
     """)
 
 
@@ -125,11 +130,33 @@ def section_basic_editable_grid():
     st.header("Basic Editable Grid", anchor="basic-editable-grid")
 
     st.markdown("""
-    The simplest way to make a grid editable is to pass `editable=True` to the `AgGrid` function.
-    This makes all columns editable with a text editor.
+    Making a grid editable requires minimal configuration. The simplest approach is to pass
+    ``editable=True`` to the ``AgGrid`` function, which enables text editing for all columns.
 
-    Alternatively, you can use `GridOptionsBuilder` to configure which columns are editable.
+    For more granular control over which columns are editable, use the ``GridOptionsBuilder``
+    to configure individual column properties. This approach allows you to lock specific columns
+    while enabling editing for others.
     """)
+
+    st.markdown("**Example**")
+
+    st.info("""
+    **Interaction:** Click any cell to edit it. Press Enter or Tab to confirm changes, Escape to cancel.
+    The Employee column is locked to demonstrate selective editability.
+    """)
+
+    gb_basic = GridOptionsBuilder.from_dataframe(df_employees)
+    gb_basic.configure_default_column(editable=True, minWidth=100)
+    gb_basic.configure_column('Employee', editable=False, pinned='left', minWidth=150)
+    gb_basic.configure_column('Salary', type=['numericColumn'], valueFormatter="'$' + value.toLocaleString()")
+    gb_basic.configure_column('::auto_unique_id::', hide=True)
+
+    gridOptions_basic = gb_basic.build()
+    response_basic = AgGrid(pd.concat([df_employees]*1), gridOptions=gridOptions_basic, height=300, nkey="basic_editable", data_return_mode='FILTERED')
+
+    if response_basic:
+        with st.expander("View Modified Data", expanded=False):
+            st.write(response_basic.data)
 
     with st.expander("Show code", expanded=False):
         st.code("""
@@ -154,125 +181,202 @@ response = AgGrid(df, gridOptions=gridOptions)
 modified_df = response['data']
 """, language="python")
 
-    st.markdown("**Output:**")
-    st.info("Click any cell to edit it. Press Enter or Tab to confirm changes, Escape to cancel.")
-
-    gb_basic = GridOptionsBuilder.from_dataframe(df_employees)
-    gb_basic.configure_default_column(editable=True, minWidth=100)
-    gb_basic.configure_column('Employee', editable=False, pinned='left', minWidth=150)
-    gb_basic.configure_column('Salary', type=['numericColumn'], valueFormatter="'$' + value.toLocaleString()")
-    gb_basic.configure_column('::auto_unique_id::', hide=True)
-
-    gridOptions_basic = gb_basic.build()
-    response_basic = AgGrid(df_employees, gridOptions=gridOptions_basic, height=300, key="basic_editable")
-
-    if response_basic['data'] is not None:
-        with st.expander("View Modified Data", expanded=False):
-            st.dataframe(response_basic['data'], use_container_width=True)
-
-
-def section_edit_types():
-    """Edit Types Section"""
-    st.header("Edit Types", anchor="edit-types")
-
-    st.markdown("""
-    AG Grid supports different cell editor types for various data formats:
-    - **Text**: Default editor for strings
-    - **Number**: Numeric input with validation
-    - **Select/Dropdown**: Choose from predefined options
-    - **Checkbox**: Boolean toggle
-    - **Date**: Date picker (requires custom editor or enterprise)
-    - **Custom**: JavaScript-based custom editors
-    """)
-
-    with st.expander("Show code", expanded=False):
-        st.code("""
-gb = GridOptionsBuilder.from_dataframe(df)
-
-# Text editor (default)
-gb.configure_column('Employee', editable=True)
-
-# Number editor - AG Grid will auto-detect numeric columns
-gb.configure_column('Age',
-    editable=True,
-    type=['numericColumn']
-)
-
-# Dropdown/Select editor using cellEditor
-gb.configure_column('Department',
-    editable=True,
-    cellEditor='agSelectCellEditor',
-    cellEditorParams={
-        'values': ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance']
-    }
-)
-
-# Checkbox editor using cellEditor
-gb.configure_column('Active',
-    editable=True,
-    cellEditor='agCheckboxCellEditor'
-)
-
-gridOptions = gb.build()
-AgGrid(df, gridOptions=gridOptions)
-""", language="python")
-
-    st.markdown("**Output:**")
-    st.info("""
-    Try editing different columns:
-    - **Department**: Click to see dropdown options
-    - **Age**: Numeric input only
-    - **Active**: Checkbox toggle
-    - **Position**: Text input
-    """)
-
-    gb_types = GridOptionsBuilder.from_dataframe(df_employees)
-    gb_types.configure_default_column(editable=True, minWidth=100)
-    gb_types.configure_column('Employee', editable=False, pinned='left', minWidth=150)
-    gb_types.configure_column('Department',
-        cellEditor='agSelectCellEditor',
-        cellEditorParams={
-            'values': ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance']
-        }
-    )
-    gb_types.configure_column('Age', type=['numericColumn'])
-    gb_types.configure_column('Salary',
-        type=['numericColumn'],
-        valueFormatter="'$' + value.toLocaleString()"
-    )
-    gb_types.configure_column('Active',
-        cellEditor='agCheckboxCellEditor'
-    )
-    gb_types.configure_column('::auto_unique_id::', hide=True)
-
-    gridOptions_types = gb_types.build()
-    response_types = AgGrid(df_employees, gridOptions=gridOptions_types, height=300, key="edit_types")
-
+    st.divider()
 
 def section_cell_editors():
     """Cell Editors Section"""
     st.header("Cell Editors", anchor="cell-editors")
 
     st.markdown("""
-    AG Grid provides several built-in cell editors:
+    AG Grid provides a comprehensive set of built-in cell editors tailored to different data types.
+    Beyond these provided editors, you can create custom editors using JavaScript code to meet
+    specialized requirements.
+    """)
+
+    # Custom Emoji Picker Editor
+    customEmojiPicker = JsCode("""
+    class EmojiPicker {
+        constructor() {
+            this.defaultImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid transparent; padding: 4px; cursor: pointer;';
+            this.selectedImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid lightgreen; padding: 4px; cursor: pointer;';
+        }
+
+        onKeyDown(event) {
+            const key = event.key;
+            if (key === 'ArrowLeft' || key === 'ArrowRight') {
+                this.toggleEmoji();
+                event.stopPropagation();
+            }
+        }
+
+        toggleEmoji() {
+            this.selectEmoji(this.emoji === '😊' ? '😢' : '😊');
+        }
+
+        init(params) {
+            this.container = document.createElement('div');
+            this.container.style.cssText = 'border-radius: 15px; border: 1px solid grey; background-color: #e6e6e6; padding: 15px; text-align:center; display:inline-block; outline:none';
+            this.container.tabIndex = 0;
+
+            this.happyEmoji = document.createElement('span');
+            this.happyEmoji.innerHTML = '😊';
+            this.happyEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+            this.sadEmoji = document.createElement('span');
+            this.sadEmoji.innerHTML = '😢';
+            this.sadEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+            this.container.appendChild(this.happyEmoji);
+            this.container.appendChild(this.sadEmoji);
+
+            this.happyEmoji.addEventListener('click', () => {
+                this.selectEmoji('😊');
+                params.stopEditing();
+            });
+
+            this.sadEmoji.addEventListener('click', () => {
+                this.selectEmoji('😢');
+                params.stopEditing();
+            });
+
+            this.container.addEventListener('keydown', (event) => {
+                this.onKeyDown(event);
+            });
+
+            this.selectEmoji(params.value || '😊');
+        }
+
+        selectEmoji(emoji) {
+            this.emoji = emoji;
+            this.happyEmoji.style.cssText = (emoji === '😊' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+            this.sadEmoji.style.cssText = (emoji === '😢' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+        }
+
+        getGui() {
+            return this.container;
+        }
+
+        afterGuiAttached() {
+            this.container.focus();
+        }
+
+        getValue() {
+            return this.emoji;
+        }
+
+        destroy() {}
+
+        isPopup() {
+            return true;
+        }
+    }
+    """)
+
+    st.markdown("### Built-in Cell Editors")
+
+    st.markdown("""
+    The following table summarizes the provided cell editors:
 
     | Editor | Description | Use Case |
     |--------|-------------|----------|
-    | `agTextCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#text-cell-editor) | Text input (default) | Names, descriptions |
-    | `agNumberCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#number-cell-editor) | Numeric input | Ages, quantities |
-    | `agSelectCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#select-cell-editor) | Dropdown selection | Categories, statuses |
-    | `agCheckboxCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#checkbox-cell-editor) | Checkbox toggle | Boolean values |
-    | `agLargeTextCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#large-text-cell-editor) | Multi-line text area | Comments, notes |
-    | `agDateCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#date-cell-editor) | Date picker (Enterprise) | Dates |
-    | `agDateStringCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#date-cell-editor-as-string) | Date as string (Enterprise) | Date strings |
-    | `agRichSelectCellEditor`[↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#rich-select-cell-editor) | Rich select with search (Enterprise) | Large option lists |
+    | ``agTextCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#text-cell-editor) | Text input (default) | Names, descriptions |
+    | ``agNumberCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#number-cell-editor) | Numeric input | Ages, quantities |
+    | ``agSelectCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#select-cell-editor) | Dropdown selection | Categories, statuses |
+    | ``agCheckboxCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#checkbox-cell-editor) | Checkbox toggle | Boolean values |
+    | ``agLargeTextCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#large-text-cell-editor) | Multi-line text area | Comments, notes |
+    | ``agDateCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#date-cell-editor) | Date picker (Enterprise) | Dates |
+    | ``agDateStringCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#date-cell-editor-as-string) | Date as string (Enterprise) | Date strings |
+    | ``agRichSelectCellEditor`` [↗](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#rich-select-cell-editor) | Rich select with search (Enterprise) | Large option lists |
 
-    You can also create custom editors using JavaScript code with the `JsCode` helper.
+    ### Custom Editors
+
+    For specialized editing requirements, you can create custom editors using the ``JsCode`` helper.
+    Custom editors provide complete control over the editing experience, including custom UI elements,
+    validation logic, and interaction patterns.
     """)
 
     with st.expander("Show code", expanded=False):
         st.code("""
 from st_aggrid import JsCode
+
+# Custom Emoji Picker Editor using JsCode
+customEmojiPicker = JsCode(\"\"\"
+class EmojiPicker {
+    constructor() {
+        this.defaultImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid transparent; padding: 4px; cursor: pointer;';
+        this.selectedImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid lightgreen; padding: 4px; cursor: pointer;';
+    }
+
+    onKeyDown(event) {
+        const key = event.key;
+        if (key === 'ArrowLeft' || key === 'ArrowRight') {
+            this.toggleEmoji();
+            event.stopPropagation();
+        }
+    }
+
+    toggleEmoji() {
+        this.selectEmoji(this.emoji === '😊' ? '😢' : '😊');
+    }
+
+    init(params) {
+        this.container = document.createElement('div');
+        this.container.style.cssText = 'border-radius: 15px; border: 1px solid grey; background-color: #e6e6e6; padding: 15px; text-align:center; display:inline-block; outline:none';
+        this.container.tabIndex = 0;
+
+        this.happyEmoji = document.createElement('span');
+        this.happyEmoji.innerHTML = '😊';
+        this.happyEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+        this.sadEmoji = document.createElement('span');
+        this.sadEmoji.innerHTML = '😢';
+        this.sadEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+        this.container.appendChild(this.happyEmoji);
+        this.container.appendChild(this.sadEmoji);
+
+        this.happyEmoji.addEventListener('click', () => {
+            this.selectEmoji('😊');
+            params.stopEditing();
+        });
+
+        this.sadEmoji.addEventListener('click', () => {
+            this.selectEmoji('😢');
+            params.stopEditing();
+        });
+
+        this.container.addEventListener('keydown', (event) => {
+            this.onKeyDown(event);
+        });
+
+        this.selectEmoji(params.value || '😊');
+    }
+
+    selectEmoji(emoji) {
+        this.emoji = emoji;
+        this.happyEmoji.style.cssText = (emoji === '😊' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+        this.sadEmoji.style.cssText = (emoji === '😢' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+    }
+
+    getGui() {
+        return this.container;
+    }
+
+    afterGuiAttached() {
+        this.container.focus();
+    }
+
+    getValue() {
+        return this.emoji;
+    }
+
+    destroy() {}
+
+    isPopup() {
+        return true;
+    }
+}
+\"\"\")
 
 gb = GridOptionsBuilder.from_dataframe(df)
 
@@ -284,69 +388,44 @@ gb.configure_column('Performance',
     }
 )
 
-# Large text editor for comments
-gb.configure_column('Comments',
+# Custom emoji picker as a virtual column
+gb.configure_column('Favorite Emoji',
+    editable=True,
+    cellEditor=customEmojiPicker,
+    cellEditorPopup=True,  # Display as popup overlay
+    minWidth=120
+)
+
+# Large text editor for notes
+gb.configure_column('Notes',
     cellEditor='agLargeTextCellEditor',
+    cellEditorPopup=True,
     cellEditorParams={
-        'maxLength': 500,
-        'rows': 5,
+        'maxLength': 200,
+        'rows': 10,
         'cols': 50
     }
 )
 
-# Custom editor using JsCode (advanced)
-custom_editor = JsCode(\"\"\"
-class CustomEditor {
-    init(params) {
-        this.eInput = document.createElement('input');
-        this.eInput.value = params.value;
-        this.eInput.classList.add('ag-input');
-        this.eInput.style.height = '100%';
-    }
-
-    getGui() {
-        return this.eInput;
-    }
-
-    getValue() {
-        return this.eInput.value.toUpperCase();
-    }
-}
-\"\"\")
-
-gb.configure_column('Position',
-    cellEditor=custom_editor
-)
-
 gridOptions = gb.build()
-AgGrid(df, gridOptions=gridOptions)
+AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True)
 """, language="python")
 
-    st.markdown("**Output:**")
-    st.info("""
-    This example demonstrates all commonly-used editor types:
-    - **Employee**: Non-editable, pinned column (for reference)
-    - **Department & Performance**: Select/dropdown editors
-    - **Position**: Text editor (default)
-    - **Age**: Number editor (numeric input only)
-    - **Salary**: Number editor with formatting
-    - **Start Date**: Text editor for dates
-    - **Active**: Checkbox editor (boolean toggle)
-    - **Notes**: Large text editor (multi-line text area) - Click to see the popup!
-    """)
+    st.markdown("### Interactive Example")
 
-    # Salary validation style
-    salary_editor_style = JsCode("""
-function(params) {
-    if (params.value < 0) {
-        return {'backgroundColor': '#ffcccc', 'color': '#d32f2f'};
-    }
-    if (params.value > 100000) {
-        return {'backgroundColor': '#c8e6c9', 'color': '#388e3c'};
-    }
-    return null;
-}
-""")
+    st.info("""
+    **Column Editor Types:**
+
+    - **Employee** — Non-editable, pinned column (for reference)
+    - **Department & Performance** — Select/dropdown editors with predefined options
+    - **Position** — Text editor (default)
+    - **Age** — Number editor (numeric input only)
+    - **Salary** — Number editor with currency formatting
+    - **Favorite Emoji** — Custom emoji picker (JsCode) - Click to see the popup! Use arrow keys to toggle
+    - **Start Date** — Text editor for dates
+    - **Active** — Checkbox editor (boolean toggle)
+    - **Notes** — Large text editor (multi-line text area) - Click to open the popup editor
+    """)
 
     gb_editors = GridOptionsBuilder.from_dataframe(df_employees)
     gb_editors.configure_default_column(editable=True, resizable=True, minWidth=100)
@@ -377,7 +456,14 @@ function(params) {
     gb_editors.configure_column('Salary',
         type=['numericColumn'],
         valueFormatter="'$' + value.toLocaleString()",
-        cellStyle=salary_editor_style,
+        minWidth=120
+    )
+
+    # Custom emoji picker column (virtual column)
+    gb_editors.configure_column('Favorite Emoji',
+        editable=True,
+        cellEditor=customEmojiPicker,
+        cellEditorPopup=True,
         minWidth=120
     )
 
@@ -402,109 +488,131 @@ function(params) {
         minWidth=200
     )
 
-    gb_editors.configure_column('Home Office Days',
-        cellEditor='agRichSelectCellEditor',
-        cellEditorPopup=True,  # Open as popup overlay instead of inline
-        cellEditorParams={
-            "values": ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            "multiSelect": True,
-            "searchType": 'matchAny',
-            "filterList": True,
-            "highlightMatch": True,
-            "valueListMaxHeight": 220,
-        },
-        minWidth=200
-    )
-
     gb_editors.configure_column('::auto_unique_id::', hide=True)
 
     gridOptions_editors = gb_editors.build()
-    response_editors = AgGrid(df_employees, gridOptions=gridOptions_editors, height=350, key="cell_editors", allow_unsafe_jscode=True, enable_enterprise_modules=True)
+    response_editors = AgGrid(df_employees, gridOptions=gridOptions_editors, height=350, key="cell_editors", allow_unsafe_jscode=True)
 
-def section_change_detection():
-    """Change Detection Section"""
-    st.header("Change Detection", anchor="change-detection")
-
-    st.markdown("""
-    Track which cells have been edited by comparing the returned data with the original DataFrame.
-    This is useful for:
-    - Highlighting modified rows
-    - Sending only changed data to the server
-    - Implementing undo/redo functionality
-    - Showing a summary of changes
-    """)
+    with st.expander('View Modified Data'):
+        st.write(response_editors.data)
 
     with st.expander("Show code", expanded=False):
         st.code("""
-# Store original data
-original_df = df.copy()
+from st_aggrid import JsCode
 
-# Render grid
-response = AgGrid(df, editable=True)
-modified_df = response['data']
+# Custom Emoji Picker Editor using JsCode
+customEmojiPicker = JsCode(\"\"\"
+class EmojiPicker {
+    constructor() {
+        this.defaultImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid transparent; padding: 4px; cursor: pointer;';
+        this.selectedImgStyle = 'padding-left:10px; padding-right:10px; border: 1px solid lightgreen; padding: 4px; cursor: pointer;';
+    }
 
-# Compare to find changes
-if modified_df is not None:
-    # Find rows that have changed
-    changed_rows = []
-    for idx in range(len(original_df)):
-        if not original_df.iloc[idx].equals(modified_df.iloc[idx]):
-            changed_rows.append(idx)
+    onKeyDown(event) {
+        const key = event.key;
+        if (key === 'ArrowLeft' || key === 'ArrowRight') {
+            this.toggleEmoji();
+            event.stopPropagation();
+        }
+    }
 
-    if changed_rows:
-        st.success(f"Modified {len(changed_rows)} row(s)")
-        st.write("Changed rows:", modified_df.iloc[changed_rows])
+    toggleEmoji() {
+        this.selectEmoji(this.emoji === '😊' ? '😢' : '😊');
+    }
+
+    init(params) {
+        this.container = document.createElement('div');
+        this.container.style.cssText = 'border-radius: 15px; border: 1px solid grey; background-color: #e6e6e6; padding: 15px; text-align:center; display:inline-block; outline:none';
+        this.container.tabIndex = 0;
+
+        this.happyEmoji = document.createElement('span');
+        this.happyEmoji.innerHTML = '😊';
+        this.happyEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+        this.sadEmoji = document.createElement('span');
+        this.sadEmoji.innerHTML = '😢';
+        this.sadEmoji.style.cssText = this.defaultImgStyle + 'font-size: 24px;';
+
+        this.container.appendChild(this.happyEmoji);
+        this.container.appendChild(this.sadEmoji);
+
+        this.happyEmoji.addEventListener('click', () => {
+            this.selectEmoji('😊');
+            params.stopEditing();
+        });
+
+        this.sadEmoji.addEventListener('click', () => {
+            this.selectEmoji('😢');
+            params.stopEditing();
+        });
+
+        this.container.addEventListener('keydown', (event) => {
+            this.onKeyDown(event);
+        });
+
+        this.selectEmoji(params.value || '😊');
+    }
+
+    selectEmoji(emoji) {
+        this.emoji = emoji;
+        this.happyEmoji.style.cssText = (emoji === '😊' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+        this.sadEmoji.style.cssText = (emoji === '😢' ? this.selectedImgStyle : this.defaultImgStyle) + 'font-size: 24px;';
+    }
+
+    getGui() {
+        return this.container;
+    }
+
+    afterGuiAttached() {
+        this.container.focus();
+    }
+
+    getValue() {
+        return this.emoji;
+    }
+
+    destroy() {}
+
+    isPopup() {
+        return true;
+    }
+}
+\"\"\")
+
+gb = GridOptionsBuilder.from_dataframe(df)
+
+# Select editor with custom parameters
+gb.configure_column('Performance',
+    cellEditor='agSelectCellEditor',
+    cellEditorParams={
+        'values': ['Excellent', 'Good', 'Average', 'Poor']
+    }
+)
+
+# Custom emoji picker as a virtual column
+gb.configure_column('Favorite Emoji',
+    editable=True,
+    cellEditor=customEmojiPicker,
+    cellEditorPopup=True,  # Display as popup overlay
+    minWidth=120
+)
+
+# Large text editor for notes
+gb.configure_column('Notes',
+    cellEditor='agLargeTextCellEditor',
+    cellEditorPopup=True,
+    cellEditorParams={
+        'maxLength': 200,
+        'rows': 10,
+        'cols': 50
+    }
+)
+
+gridOptions = gb.build()
+AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True)
 """, language="python")
 
-    st.markdown("**Output:**")
-    st.info("Edit any cells below and see the change detection in action.")
-
-    # Initialize session state for change tracking
-    if 'original_data' not in st.session_state:
-        st.session_state.original_data = df_employees.copy()
-
-    gb_changes = GridOptionsBuilder.from_dataframe(df_employees)
-    gb_changes.configure_default_column(editable=True, minWidth=100)
-    gb_changes.configure_column('Employee', editable=False, pinned='left', minWidth=150)
-    gb_changes.configure_column('Department',
-        cellEditor='agSelectCellEditor',
-        cellEditorParams={
-            'values': ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance']
-        }
-    )
-    gb_changes.configure_column('Salary',
-        type=['numericColumn'],
-        valueFormatter="'$' + value.toLocaleString()"
-    )
-    gb_changes.configure_column('::auto_unique_id::', hide=True)
-
-    gridOptions_changes = gb_changes.build()
-    response_changes = AgGrid(df_employees, gridOptions=gridOptions_changes, height=300, key="change_detection")
-
-    # Detect changes
-    if response_changes['data'] is not None:
-        modified_df = pd.DataFrame(response_changes['data'])
-        original_df = st.session_state.original_data
-
-        # Find changed rows
-        changed_indices = []
-        for idx in range(len(original_df)):
-            if idx < len(modified_df):
-                orig_row = original_df.iloc[idx].to_dict()
-                mod_row = modified_df.iloc[idx].to_dict()
-                if orig_row != mod_row:
-                    changed_indices.append(idx)
-
-        if changed_indices:
-            st.success(f"✏️ Detected {len(changed_indices)} modified row(s)")
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("**Original Data (Changed Rows):**")
-                st.dataframe(original_df.iloc[changed_indices], use_container_width=True)
-            with col2:
-                st.markdown("**Modified Data (Changed Rows):**")
-                st.dataframe(modified_df.iloc[changed_indices], use_container_width=True)
+    st.divider()
 
 
 def section_server_sync_strategy():
@@ -512,231 +620,256 @@ def section_server_sync_strategy():
     st.header("Server Sync Strategy", anchor="server-sync-strategy")
 
     st.markdown("""
-    The `reload_data` parameter controls how the grid handles updates to the underlying data:
+    When working with editable grids, understanding how local edits interact with server data updates
+    is crucial for maintaining data consistency. The ``server_sync_strategy`` parameter controls this behavior.
 
-    - **`reload_data=False` (default - "client wins")**: Once the grid has been edited ("dirty"), it ignores
-      updates to the underlying DataFrame. Modified data persists in the grid.
+    **Strategy Options**
 
-    - **`reload_data=True` ("server wins")**: The grid always updates when the underlying DataFrame changes,
-      even if cells have been edited. This overwrites any local edits.
+    Two synchronization strategies are available:
 
-    This behavior is important when your data source updates while users are editing.
+    **client_wins** (default)
+        Once the grid has been edited, it becomes "dirty" and ignores subsequent updates to the
+        underlying DataFrame. Local modifications persist in the grid even when the data source changes.
+        This strategy prioritizes user edits over server updates.
+
+    **server_wins**
+        The grid always accepts updates from the underlying DataFrame, even after cells have been edited.
+        User edits are overwritten unless you implement manual merge logic to preserve specific changes.
+        This strategy prioritizes server data freshness over local edits.
+
+    .. note::
+       The choice between these strategies depends on your application's requirements. Use ``client_wins``
+       when user edits should always be preserved, or ``server_wins`` when server data takes precedence
+       and you need fine-grained control over which edits to retain.
     """)
+
+    # Client Wins Demo
+    st.markdown("### Client Wins Strategy")
+
+    st.markdown("""
+    The client wins strategy is the default behavior and is suitable for scenarios where user input
+    should always take precedence over server updates. Once a cell is edited, the grid enters a "dirty"
+    state and stops accepting external data changes.
+    """)
+
+    with st.container(border=True):
+        st.markdown("**Interactive Demonstration**")
+        st.markdown("""
+        Try editing cells in the grid below, then click **Update Input Data**. Observe that once you
+        modify any cell, the grid enters a dirty state and ignores subsequent data updates. Your edits
+        remain intact while fresh server data is rejected.
+        """)
+
+        # Initialize edited_rows tracker for client wins
+        if 'client_edited_rows' not in st.session_state:
+            st.session_state.client_edited_rows = set()
+
+        # Get fresh data from "server"
+        client_data = df_olympic.sample(10, random_state=st.session_state.get('client_data_counter', 0))
+
+        with st.expander("Input Data (Fresh from Server)", expanded=False):
+            st.dataframe(
+                df_olympic.sample(10, random_state=st.session_state.get('client_data_counter', 0)),
+                use_container_width=True
+            )
+
+        st.markdown("**Editable Grid (Client Wins - Edits preserved, updates ignored):**")
+        client_grid = AgGrid(
+            client_data,
+            editable=True,
+            sortable=False,
+            server_sync_strategy="client_wins",  # Default behavior
+            key="client_wins_grid",
+            debug=False,
+            height=350
+        )
+
+        # Track edited rows
+        if client_grid.event_data.get('node', {}).get('rowIndex') is not None:
+            row_idx = client_grid['eventData']['node']['rowIndex']
+            st.session_state.client_edited_rows.add(row_idx)
+
+        st.button(
+            "Update Input Data",
+            key="client_update",
+            on_click=lambda: st.session_state.update({'client_data_counter': st.session_state.get('client_data_counter', 0) + 1})
+        )
+
+        with st.expander("Returned Data", expanded=False):
+            st.dataframe(client_grid.data, use_container_width=True)
+
+        # Show which rows are edited
+        if st.session_state.client_edited_rows:
+            st.info(f"Edited rows (updates ignored after first edit): {sorted(st.session_state.client_edited_rows)}")
+            if st.button("Clear Edits", key="clear_client_edits"):
+                st.session_state.client_edited_rows = set()
+                st.rerun()
 
     with st.expander("Show code - Client Wins Strategy", expanded=False):
         st.code("""
 import streamlit as st
 from st_aggrid import AgGrid
+import pandas as pd
 
-# Client wins strategy (default)
-st.button("Refresh Data", key="refresh_client")
-data = df.sample(5)  # Simulate data refresh
+# Initialize session state
+if 'client_edited_rows' not in st.session_state:
+    st.session_state.client_edited_rows = set()
 
+# Get fresh data from "server" (simulated with random sample)
+data = df_olympic.sample(10, random_state=st.session_state.get('client_data_counter', 0))
+
+# Display the grid with client_wins strategy (default)
 response = AgGrid(
     data,
     editable=True,
-    reload_data=False,  # Grid ignores updates once edited
-    key="client_wins_grid"
+    server_sync_strategy="client_wins",  # Grid ignores updates once edited
+    key="client_wins_grid",
+    height=350
 )
 
-st.info(\"\"\"
-Once you edit any cell, the grid becomes "dirty" and stops
-updating even when you click the refresh button.
-\"\"\")
+# Track edited rows
+if response.get('eventData', {}).get('node', {}).get('rowIndex') is not None:
+    row_idx = response['eventData']['node']['rowIndex']
+    st.session_state.client_edited_rows.add(row_idx)
+
+# Button to refresh data
+st.button("Update Input Data", key="client_update")
 """, language="python")
+
+    st.divider()
+
+    # Server Wins Demo
+    st.markdown("### Server Wins Strategy")
+
+    st.markdown("""
+    The server wins strategy provides greater control over data synchronization by always accepting
+    updates from the underlying DataFrame. This approach is useful when server data must remain current,
+    but requires implementing custom logic to selectively preserve user edits.
+
+    The example below demonstrates a common pattern: tracking which rows have been edited and merging
+    those changes back into fresh server data before updating the grid.
+    """)
+
+    with st.container(border=True):
+        st.markdown("**Interactive Demonstration**")
+        st.markdown("""
+        Edit cells in the grid below, then click **Update Input Data**. Notice that your edits are
+        preserved through manual merge logic even as unedited rows refresh with new server data.
+        This pattern gives you complete control over which changes to retain during synchronization.
+        """)
+
+        # Initialize edited_rows tracker for server wins
+        if 'server_edited_rows' not in st.session_state:
+            st.session_state.server_edited_rows = set()
+
+        # Get fresh data from "server"
+        server_data = df_olympic.sample(10, random_state=st.session_state.get('server_data_counter', 0))
+
+        # Merge with previously edited data
+        if (server_grid_return := st.session_state.get('server_wins_grid', None)):
+            server_grid_return = AgGridReturn(server_grid_return)
+            edited_data = server_grid_return.data
+
+            # Track new edits
+            if (rowIndex := server_grid_return.event_data.get('node', {}).get('rowIndex', None)) is not None:
+                st.session_state.server_edited_rows.add(rowIndex)
+
+            # Merge logic: keep edited rows, replace non-edited with fresh data
+            if st.session_state.server_edited_rows:
+                # Ensure same length and reset indices
+                min_len = min(len(edited_data), len(server_data))
+                edited_data = edited_data.iloc[:min_len]
+                server_data = server_data.iloc[:min_len]
+
+                # Ensure same columns
+                edited_data = edited_data[server_data.columns]
+
+                # Preserve edited rows
+                for row_idx in st.session_state.server_edited_rows:
+                    if row_idx < len(edited_data):
+                        server_data.iloc[row_idx] = edited_data.iloc[row_idx].values
+
+        with st.expander("Input Data (Fresh from Server)", expanded=False):
+            st.dataframe(
+                df_olympic.sample(10, random_state=st.session_state.get('server_data_counter', 0)),
+                use_container_width=True
+            )
+
+        st.markdown("**Editable Grid (Server Wins - Manual merge to preserve edits):**")
+        server_grid = AgGrid(
+            server_data,
+            editable=True,
+            sortable=False,
+            server_sync_strategy="server_wins",
+            key="server_wins_grid",
+            debug=False,
+            height=350
+        )
+
+        st.button(
+            "Update Input Data",
+            key="server_update",
+            on_click=lambda: st.session_state.update({'server_data_counter': st.session_state.get('server_data_counter', 0) + 1})
+        )
+
+        with st.expander("Returned Data", expanded=False):
+            st.dataframe(server_grid.data, use_container_width=True)
+
+        # Show which rows are edited
+        if st.session_state.server_edited_rows:
+            st.info(f"Edited rows (preserved through manual merge): {sorted(st.session_state.server_edited_rows)}")
+            if st.button("Clear Edits", key="clear_server_edits"):
+                del st.session_state.server_edited_rows
+                st.session_state.server_edited_rows = set()
+                st.rerun()
 
     with st.expander("Show code - Server Wins Strategy", expanded=False):
         st.code("""
-# Server wins strategy
-st.button("Refresh Data", key="refresh_server")
-data = df.sample(5)  # Simulate data refresh
+import streamlit as st
+from st_aggrid import AgGrid
+import pandas as pd
 
+# Initialize session state
+if 'server_edited_rows' not in st.session_state:
+    st.session_state.server_edited_rows = set()
+
+# Get fresh data from "server" (simulated with random sample)
+fresh_data = df_olympic.sample(10, random_state=st.session_state.get('server_data_counter', 0))
+
+# Merge with previously edited data (manual preservation logic)
+if (grid_return := st.session_state.get('server_wins_grid', None)):
+    edited_data = grid_return.data
+
+    # Track new edits
+    if (row_idx := grid_return.get('eventData', {}).get('node', {}).get('rowIndex')) is not None:
+        st.session_state.server_edited_rows.add(row_idx)
+
+    # Merge logic: keep edited rows, replace non-edited with fresh data
+    if st.session_state.server_edited_rows:
+        min_len = min(len(edited_data), len(fresh_data))
+        edited_data = edited_data.iloc[:min_len]
+        fresh_data = fresh_data.iloc[:min_len]
+        edited_data = edited_data[fresh_data.columns]
+
+        # Preserve edited rows
+        for row_idx in st.session_state.server_edited_rows:
+            if row_idx < len(edited_data):
+                fresh_data.iloc[row_idx] = edited_data.iloc[row_idx].values
+
+# Display the grid with server_wins strategy
 response = AgGrid(
-    data,
+    fresh_data,
     editable=True,
-    reload_data=True,  # Grid always updates with new data
-    key="server_wins_grid"
+    server_sync_strategy="server_wins",  # Grid always accepts updates
+    key="server_wins_grid",
+    height=350
 )
 
-st.info(\"\"\"
-The grid always updates when you click refresh,
-even if you've edited cells. Your edits will be lost.
-\"\"\")
+# Button to refresh data
+st.button("Update Input Data", key="server_update")
 """, language="python")
 
-    st.markdown("**Demo - Client Wins (Default):**")
-    st.info("""
-    Edit a cell, then click 'Refresh Data'. The grid will keep your edits and ignore the refresh.
-    To reset, change the key or reload the page.
-    """)
-
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.button("Refresh Data", key="refresh_client_wins")
-    with col2:
-        pass
-
-    # Sample data for demo
-    data_client = df_olympic.sample(10, random_state=42) if 'refresh_client_wins' not in st.session_state else df_olympic.sample(10)
-
-    gb_client = GridOptionsBuilder.from_dataframe(data_client[['athlete', 'age', 'country', 'sport', 'gold', 'silver', 'bronze']])
-    gb_client.configure_default_column(editable=True, minWidth=100)
-    gb_client.configure_column('athlete', editable=False, minWidth=150)
-    gridOptions_client = gb_client.build()
-
-    response_client = AgGrid(
-        data_client[['athlete', 'age', 'country', 'sport', 'gold', 'silver', 'bronze']],
-        gridOptions=gridOptions_client,
-        reload_data=False,
-        height=250,
-        key="client_wins_grid"
-    )
-
-    st.markdown("**Demo - Server Wins:**")
-    st.info("""
-    Edit a cell, then click 'Refresh Data'. The grid will update with new data, discarding your edits.
-    """)
-
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        refresh_server = st.button("Refresh Data", key="refresh_server_wins")
-    with col2:
-        pass
-
-    # Sample data for demo
-    if refresh_server:
-        data_server = df_olympic.sample(10)
-    else:
-        data_server = df_olympic.sample(10, random_state=99)
-
-    gb_server = GridOptionsBuilder.from_dataframe(data_server[['athlete', 'age', 'country', 'sport', 'gold', 'silver', 'bronze']])
-    gb_server.configure_default_column(editable=True, minWidth=100)
-    gb_server.configure_column('athlete', editable=False, minWidth=150)
-    gridOptions_server = gb_server.build()
-
-    response_server = AgGrid(
-        data_server[['athlete', 'age', 'country', 'sport', 'gold', 'silver', 'bronze']],
-        gridOptions=gridOptions_server,
-        reload_data=True,
-        height=250,
-        key="server_wins_grid"
-    )
-
-
-def section_validation():
-    """Validation Section"""
-    st.header("Data Validation", anchor="validation")
-
-    st.markdown("""
-    Implement client-side validation to ensure data integrity using cell style callbacks and value setters.
-    You can:
-    - Validate input format (e.g., email addresses, phone numbers)
-    - Check value ranges (e.g., age > 0, salary within limits)
-    - Enforce business rules
-    - Provide visual feedback with custom cell styles
-    """)
-
-    with st.expander("Show code", expanded=False):
-        st.code("""
-from st_aggrid import JsCode
-
-gb = GridOptionsBuilder.from_dataframe(df)
-
-# Cell style function to highlight invalid cells
-cell_style_jscode = JsCode(\"\"\"
-function(params) {
-    if (params.value < 0) {
-        return {'backgroundColor': '#ffcccc', 'color': 'red'};
-    }
-    if (params.value > 100000) {
-        return {'backgroundColor': '#fff4cc', 'color': 'orange'};
-    }
-    return null;
-}
-\"\"\")
-
-gb.configure_column('Salary',
-    editable=True,
-    type=['numericColumn'],
-    cellStyle=cell_style_jscode
-)
-
-# Value parser to validate and transform input
-value_parser = JsCode(\"\"\"
-function(params) {
-    const newValue = parseInt(params.newValue);
-    if (isNaN(newValue) || newValue < 0) {
-        alert('Salary must be a positive number');
-        return params.oldValue;  // Reject change
-    }
-    if (newValue > 200000) {
-        alert('Salary cannot exceed $200,000');
-        return params.oldValue;  // Reject change
-    }
-    return newValue;  // Accept change
-}
-\"\"\")
-
-gb.configure_column('Salary',
-    editable=True,
-    valueParser=value_parser
-)
-
-gridOptions = gb.build()
-AgGrid(df, gridOptions=gridOptions)
-""", language="python")
-
-    st.markdown("**Output:**")
-    st.info("""
-    Validation rules for Salary:
-    - Values < 0: Highlighted in red
-    - Values > $100,000: Highlighted in yellow/orange
-    - Try entering negative values or values > $200,000 to see validation
-    """)
-
-    # Cell style for validation
-    cell_style_validation = JsCode("""
-function(params) {
-    if (params.value < 0) {
-        return {'backgroundColor': '#ffcccc', 'color': '#d32f2f', 'fontWeight': 'bold'};
-    }
-    if (params.value > 100000) {
-        return {'backgroundColor': '#fff4cc', 'color': '#f57c00'};
-    }
-    return null;
-}
-""")
-
-    # Value parser for salary validation
-    salary_parser = JsCode("""
-function(params) {
-    const newValue = parseInt(params.newValue);
-    if (isNaN(newValue) || newValue < 0) {
-        return params.oldValue;
-    }
-    if (newValue > 200000) {
-        return params.oldValue;
-    }
-    return newValue;
-}
-""")
-
-    gb_validation = GridOptionsBuilder.from_dataframe(df_employees)
-    gb_validation.configure_default_column(editable=True, minWidth=100)
-    gb_validation.configure_column('Employee', editable=False, pinned='left', minWidth=150)
-    gb_validation.configure_column('Salary',
-        type=['numericColumn'],
-        valueFormatter="'$' + value.toLocaleString()",
-        cellStyle=cell_style_validation,
-        valueParser=salary_parser
-    )
-    gb_validation.configure_column('Age',
-        type=['numericColumn']
-    )
-    gb_validation.configure_column('::auto_unique_id::', hide=True)
-
-    gridOptions_validation = gb_validation.build()
-    response_validation = AgGrid(df_employees, gridOptions=gridOptions_validation, height=300, key="validation_example")
+    st.divider()
 
 
 # ============================================================================
@@ -745,24 +878,16 @@ function(params) {
 
 if SECTIONS.get('overview', False):
     section_overview()
+    st.divider()
 
 if SECTIONS.get('basic_editable_grid', False):
     section_basic_editable_grid()
 
-if SECTIONS.get('edit_types', False):
-    section_edit_types()
-
 if SECTIONS.get('cell_editors', False):
     section_cell_editors()
 
-if SECTIONS.get('change_detection', False):
-    section_change_detection()
-
 if SECTIONS.get('server_sync_strategy', False):
     section_server_sync_strategy()
-
-if SECTIONS.get('validation', False):
-    section_validation()
 
 
 # ============================================================================
@@ -771,16 +896,16 @@ if SECTIONS.get('validation', False):
 
 st.divider()
 
-st.info("""
-**Learn More:**
+st.markdown("""
+## Additional Resources
 
-For more information on cell editing and advanced features:
+For comprehensive information on cell editing and advanced features, consult the official AG Grid documentation:
 
-- [AG Grid Cell Editing](https://www.ag-grid.com/javascript-data-grid/cell-editing/)
-- [AG Grid Provided Cell Editors](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/)
-- [AG Grid Cell Editor Components](https://www.ag-grid.com/javascript-data-grid/component-cell-editor/)
-- [AG Grid Value Setters](https://www.ag-grid.com/javascript-data-grid/value-setters/)
-- [AG Grid Cell Data Types](https://www.ag-grid.com/javascript-data-grid/cell-data-types/)
+- `AG Grid Cell Editing <https://www.ag-grid.com/javascript-data-grid/cell-editing/>`_
+- `Provided Cell Editors <https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/>`_
+- `Cell Editor Components <https://www.ag-grid.com/javascript-data-grid/component-cell-editor/>`_
+- `Value Setters <https://www.ag-grid.com/javascript-data-grid/value-setters/>`_
+- `Cell Data Types <https://www.ag-grid.com/javascript-data-grid/cell-data-types/>`_
 
-Check out other documentation pages for more examples and use cases.
+Explore other sections of this documentation for additional examples and use cases.
 """)

@@ -280,7 +280,7 @@ if len(selected_rows) > 0:
 
     response_selection = AgGrid(df, gridOptions=gridOptions_selection, height=250, key="selection_example")
 
-    if response_selection['selected_rows'] is not None and len(response_selection['selected_rows']) > 0:
+    if response_selection.selected_rows is not None and len(response_selection.selected_rows) > 0:
         selected_df = pd.DataFrame(response_selection['selected_rows'])
         st.success(f"Selected {len(selected_df)} employee(s)")
         st.dataframe(selected_df[['Employee', 'Department', 'Salary']], use_container_width=True)

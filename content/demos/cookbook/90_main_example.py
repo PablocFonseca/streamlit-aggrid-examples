@@ -221,6 +221,73 @@ grid_response = AgGrid(
     enable_enterprise_modules=enable_enterprise_modules,
 )
 
+with st.expander("Show code", expanded=False):
+    st.code("""
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode, JsCode
+import pandas as pd
+import numpy as np
+
+# Create sample data
+df = pd.DataFrame({
+    "date_time_naive": pd.date_range("2021-01-01", periods=30),
+    "apple": np.random.randint(0, 100, 30) / 3.0,
+    "banana": np.random.randint(0, 100, 30) / 5.0,
+    "chocolate": np.random.randint(0, 100, 30),
+    "group": np.random.choice(["A", "B"], size=30)
+})
+
+# Build grid options
+gb = GridOptionsBuilder.from_dataframe(df)
+
+# Configure default columns
+gb.configure_default_column(
+    groupable=True,
+    value=True,
+    enableRowGroup=True,
+    aggFunc="sum",
+    editable=True
+)
+
+# Configure specific columns
+gb.configure_column("apple", type=["numericColumn"], precision=2, aggFunc="sum")
+gb.configure_column("banana", type=["numericColumn"], precision=1, aggFunc="avg")
+gb.configure_column("chocolate", type=["numericColumn"], aggFunc="max")
+
+# Cell style for group column
+cellsytle_jscode = JsCode('''
+function(params) {
+    if (params.value == 'A') {
+        return {'color': 'white', 'backgroundColor': 'darkred'}
+    } else {
+        return {'color': 'black', 'backgroundColor': 'white'}
+    }
+}
+''')
+gb.configure_column("group", cellStyle=cellsytle_jscode)
+
+# Configure sidebar (Enterprise feature)
+gb.configure_side_bar()
+
+# Configure selection
+gb.configure_selection('multiple', use_checkbox=True)
+
+# Configure pagination
+gb.configure_pagination(paginationAutoPageSize=True)
+
+gridOptions = gb.build()
+
+# Display the grid
+grid_response = AgGrid(
+    df,
+    gridOptions=gridOptions,
+    height=300,
+    allow_unsafe_jscode=True,
+    enable_enterprise_modules=True
+)
+""", language="python")
+
+st.divider()
+
 df = grid_response["data"]
 selected = grid_response["selected_rows"]
 selected_df = pd.DataFrame(selected).apply(pd.to_numeric, errors="coerce")

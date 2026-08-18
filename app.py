@@ -1,6 +1,8 @@
 import streamlit as st
 from components.ui_components import inject_banner_styles, render_banner, render_premium_button
 
+st.set_page_config(layout='wide')
+
 # Global CSS for sidebar navigation
 st.markdown("""
 <style>
@@ -50,18 +52,19 @@ pages = {
     ],
     "📍 User Guide": [
         st.Page("content/docs/10_configuration.py", title="Basic Configuration", icon="⚙️"),
-        st.Page("content/docs/20_column_configuration.py", title="Column Configuration", icon="📊"),  
+        st.Page("content/docs/20_column_configuration.py", title="Column Configuration", icon="📊"),
         st.Page("content/docs/30_grid_options_builder.py", title="GridOptions Builder", icon="🔧"),
-        st.Page("content/docs/40_data_editing.py", title="Data Editing", icon="✏️"),  
-        st.Page("content/docs/50_row_selection.py", title="Row Selection", icon="✅"),   
-        st.Page("content/docs/60_aggrid_parameters.py", title="AgGrid Function Parameters", icon="📋"), 
+        st.Page("content/docs/40_data_editing.py", title="Data Editing", icon="✏️"),
+        st.Page("content/docs/45_AgGridReturn.py", title="AgGridReturn API", icon="📦"),
+        # st.Page("content/docs/50_row_selection.py", title="Row Selection", icon="✅"),  # TODO: Implement
+        st.Page("content/docs/60_aggrid_parameters.py", title="AgGrid Parameters", icon="📋"),
         st.Page("content/docs/70_grid_events.py", title="Grid Events & Callbacks", icon="🔔"),
-        st.Page("content/docs/80_server_synch.py", title="Server Synch Strategy", icon="🔄"),
-        st.Page("content/docs/90_returned_data.py", title="Working with Returned Data", icon="📤"),
+        # st.Page("content/docs/80_server_synch.py", title="Server Synch Strategy", icon="🔄"),  # TODO: Implement
+        # st.Page("content/docs/90_returned_data.py", title="Working with Returned Data", icon="📤"),  # TODO: Implement
         st.Page("content/docs/100_JsCode.py", title="Custom JavaScript Code", icon="🧑‍💻"),
         st.Page("content/docs/110_Themes.py", title="Themes & Visual Customization", icon="🎨"),
-        st.Page("content/docs/120_performance.py", title="Performance & Large Datasets", icon="⚡"),  
-        st.Page("content/docs/130_Licencing.py", title="Enterprise Features & Licensing", icon="💼"), 
+        # st.Page("content/docs/120_performance.py", title="Performance & Large Datasets", icon="⚡"),  # TODO: Implement
+        st.Page("content/docs/130_Licencing.py", title="Enterprise Features & Licensing", icon="💼"),
     ],
     "💻 Demos": [
         st.Page("content/demos/cookbook/90_main_example.py", title="Main Example"),

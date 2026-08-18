@@ -1,0 +1,990 @@
+"""
+AgGridReturn API Reference
+===========================
+
+This guide provides comprehensive documentation for the AgGridReturn object, which is returned
+by the AgGrid component and provides access to grid data, state, and user interactions.
+
+Based on the streamlit-aggrid AgGridReturn implementation.
+"""
+
+import streamlit as st
+from st_aggrid import AgGrid, GridOptionsBuilder
+from streamlit_aggrid import AgGridReturn
+from pathlib import Path
+import pandas as pd
+import numpy as np
+import json
+
+st.set_page_config(page_title="AgGridReturn API Reference", layout="wide")
+
+# ============================================================================
+# SECTION CONTROL - Set to True/False to enable/disable sections
+# ============================================================================
+SECTIONS = {
+    'overview': True,
+    'basic_usage': True,
+    'core_properties': True,
+    'row_id_properties': True,
+    'data_return_modes': True,
+    'dictionary_interface': True,
+    'multiindex_example': True,
+}
+
+# Sidebar navigation/index
+with st.sidebar:
+    st.markdown('''
+    <div class="sidebar-nav-section">On this page</div>
+    <div class="sidebar-nav-container">
+        <a href="#overview" class="sidebar-nav-link">Overview</a>
+        <a href="#basic-usage-patterns" class="sidebar-nav-link">Basic Usage Patterns</a>
+        <a href="#core-properties" class="sidebar-nav-link">Core Properties</a>
+        <a href="#row-id-properties" class="sidebar-nav-link">Row ID Properties</a>
+        <a href="#data-return-modes" class="sidebar-nav-link">Data Return Modes</a>
+        <a href="#dictionary-interface" class="sidebar-nav-link">Dictionary Interface</a>
+        <a href="#multiindex-example" class="sidebar-nav-link">MultiIndex Example</a>
+    </div>
+    ''', unsafe_allow_html=True)
+
+st.title("AgGridReturn API Reference")
+
+st.markdown("""
+The `AgGridReturn` object is the primary way to access data and state information from the AgGrid component.
+It provides a convenient interface to retrieve grid data, selected rows, filter/sort state, and event information.
+""")
+
+# Load Olympic data
+data_path = Path(__file__).parent.parent.parent.joinpath(
+    "assets", "olympic-winners.json"
+)
+
+@st.cache_data
+def load_olympic_data():
+    """Load Olympic winners data for demonstrations."""
+    return pd.read_json(data_path)
+
+@st.cache_data
+def get_sample_data():
+    """Create sample employee data."""
+    np.random.seed(42)
+    return pd.DataFrame({
+        'Employee': [
+            'Alice Johnson', 'Bob Smith', 'Charlie Brown', 'Diana Prince',
+            'Edward Norton', 'Fiona Apple', 'George Martin', 'Helen Troy'
+        ],
+        'Department': [
+            'Engineering', 'Sales', 'Engineering', 'Marketing',
+            'Sales', 'Engineering', 'Marketing', 'Sales'
+        ],
+        'Position': [
+            'Senior Dev', 'Account Manager', 'Tech Lead', 'Marketing Manager',
+            'Sales Director', 'Developer', 'Content Creator', 'Sales Rep'
+        ],
+        'Age': [28, 35, 42, 31, 45, 29, 38, 33],
+        'Salary': [75000, 65000, 95000, 70000, 80000, 78000, 72000, 68000],
+        'Active': [True, True, True, False, True, True, False, True],
+    })
+
+df_olympic = load_olympic_data()
+df_employees = get_sample_data()
+
+
+# ============================================================================
+# SECTION FUNCTIONS
+# ============================================================================
+
+def section_overview():
+    """Overview Section"""
+    st.header("Overview", anchor="overview")
+
+    st.markdown("""
+    The `AgGridReturn` object is automatically returned when you call `AgGrid()`. It encapsulates
+    all the information about the grid's current state, including:
+
+    - **Grid data** — All rows or filtered/sorted subsets
+    - **Selected rows** — Rows the user has selected
+    - **Grid state** — Current filter, sort, and column states
+    - **Event data** — Information about the last event that triggered an update
+    - **Row IDs** — Row identifiers after filtering and sorting
+
+    This object is essential for building interactive applications where you need to respond to
+    user actions within the grid.
+
+    ### Key Features
+
+    - **Property-based access** — Clean, readable code with `response.data`, `response.selected_data`
+    - **Dictionary interface** — Backward compatibility with `response['data']` style access
+    - **Type safety** — Returns properly typed DataFrames and dictionaries
+    - **Flexible data modes** — Control whether you get all data, filtered data, or sorted data
+    """)
+
+
+def section_basic_usage():
+    """Basic Usage Patterns Section"""
+    st.header("Basic Usage Patterns", anchor="basic-usage-patterns")
+
+    st.markdown("""
+    There are two main patterns for working with `AgGridReturn`:
+
+    ### Pattern 1: Direct Return from AgGrid
+
+    The most common pattern is to capture the return value directly:
+
+    ```python
+    response = AgGrid(df, gridOptions=gridOptions, key="my_grid")
+
+    # Access data using properties
+    all_data = response.data
+    selected = response.selected_data
+    ```
+
+    ### Pattern 2: Wrapping Session State (Advanced)
+
+    When using `server_sync_strategy="server_wins"`, you may need to access grid data from
+    session state to implement custom merge logic. In this case, wrap the raw session state
+    value in an `AgGridReturn` object:
+
+    ```python
+    # Retrieve raw grid response from session state
+    raw_response = st.session_state.get('my_grid', None)
+
+    if raw_response:
+        # Wrap in AgGridReturn to access convenient properties
+        response = AgGridReturn(raw_response)
+        edited_data = response.data
+
+        # Now implement your custom merge logic
+        # ... merge edited_data with fresh_server_data ...
+    ```
+
+    This pattern is particularly useful for preserving user edits when server data updates.
+    """)
+
+    st.markdown("### Interactive Example")
+
+    st.info("The grid below demonstrates the direct return pattern. Select rows and observe the response properties.")
+
+    gb_basic = GridOptionsBuilder.from_dataframe(df_employees)
+    gb_basic.configure_default_column(editable=True, sortable=True, filter=True, minWidth=100)
+    gb_basic.configure_selection(selection_mode='multiple', use_checkbox=True)
+    gb_basic.configure_column('::auto_unique_id::', hide=True)
+
+    gridOptions_basic = gb_basic.build()
+    response_basic = AgGrid(
+        df_employees,
+        gridOptions=gridOptions_basic,
+        height=300,
+        key="basic_usage_example",
+        data_return_mode='AS_INPUT'
+    )
+
+    # Create tabs for different response properties
+    tab1, tab2, tab3, tab4 = st.tabs(["data", "selected_data", "event_data", "grid_state"])
+
+    with tab1:
+        st.markdown("**`response.data`**")
+        if response_basic.data is not None:
+            st.dataframe(response_basic.data, use_container_width=True, height=200)
+            st.caption(f"Shape: {response_basic.data.shape}")
+        else:
+            st.info("No data available")
+
+    with tab2:
+        st.markdown("**`response.selected_data`**")
+        if response_basic.selected_data is not None and len(response_basic.selected_data) > 0:
+            st.dataframe(response_basic.selected_data, use_container_width=True, height=200)
+            st.caption(f"Selected: {len(response_basic.selected_data)} rows")
+        else:
+            st.info("No rows selected. Select rows using the checkboxes above to see them here.")
+
+    with tab3:
+        st.markdown("**`response.event_data`**")
+        if response_basic.event_data:
+            st.json(response_basic.event_data)
+        else:
+            st.info("No event data available. Interact with the grid (edit, filter, sort) to see event information.")
+
+    with tab4:
+        st.markdown("**`response.grid_state`**")
+        if response_basic.grid_state:
+            st.json(response_basic.grid_state)
+        else:
+            st.info("No grid state available")
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+from st_aggrid import AgGrid, GridOptionsBuilder
+from streamlit_aggrid import AgGridReturn
+
+# Pattern 1: Direct return
+response = AgGrid(df, gridOptions=gridOptions, key="my_grid")
+
+# Access properties
+all_data = response.data
+selected = response.selected_data
+grid_state = response.grid_state
+
+# Pattern 2: From session state (for server_wins strategy)
+raw_response = st.session_state.get('my_grid', None)
+if raw_response:
+    response = AgGridReturn(raw_response)
+    edited_data = response.data
+""", language="python")
+
+
+def section_core_properties():
+    """Core Properties Section"""
+    st.header("Core Properties", anchor="core-properties")
+
+    st.markdown("""
+    The `AgGridReturn` object provides several core properties for accessing grid data and state.
+
+    ### data
+
+    Returns all grid data as a pandas DataFrame (or JSON string, depending on input type).
+    The exact content depends on the `data_return_mode` setting:
+    - `AS_INPUT` — All rows as originally provided
+    - `FILTERED` — Only rows passing current filters
+    - `FILTERED_AND_SORTED` — Filtered and sorted rows
+
+    ### selected_data / selected_rows
+
+    Returns only the rows that the user has selected, as a pandas DataFrame.
+    Returns `None` if no rows are selected.
+
+    **Note:** Both `selected_data` and `selected_rows` are available and return the same value.
+    `selected_rows` is provided as an alias for backward compatibility.
+
+    ### grid_state
+
+    Returns the complete grid state as a dictionary. This includes filter models, sort models,
+    column state, and row selection. Useful for persisting grid state across sessions.
+
+    See: [AG Grid Initial State](https://ag-grid.com/javascript-data-grid/grid-options/#reference-miscellaneous-initialState)
+
+    ### columns_state
+
+    Returns the column state as a dictionary, including column visibility, order, width, and pinning.
+    Typically used when saving/restoring column configurations.
+
+    ### event_data
+
+    Returns information about the event that triggered the grid update, including:
+    - Event type (e.g., `cellValueChanged`, `selectionChanged`)
+    - Affected node/row information
+    - Column information (for cell events)
+
+    ### grid_options
+
+    Returns the GridOptions object as applied to the grid, including any defaults that were merged.
+    """)
+
+    st.markdown("### Interactive Example")
+
+    st.info("Interact with the grid below (select, filter, sort, edit) and observe how the properties change.")
+
+    gb_core = GridOptionsBuilder.from_dataframe(df_employees)
+    gb_core.configure_default_column(editable=True, sortable=True, filter=True, minWidth=100)
+    gb_core.configure_selection(selection_mode='multiple', use_checkbox=True)
+    gb_core.configure_column('Employee', pinned='left')
+    gb_core.configure_column('::auto_unique_id::', hide=True)
+
+    gridOptions_core = gb_core.build()
+    response_core = AgGrid(
+        df_employees,
+        gridOptions=gridOptions_core,
+        height=300,
+        key="core_properties_example",
+        data_return_mode='FILTERED_AND_SORTED'
+    )
+
+    # Display properties
+    tab1, tab2, tab3, tab4 = st.tabs(["data", "selected_data", "grid_state", "event_data"])
+
+    with tab1:
+        st.markdown("**`response.data`**")
+        if response_core.data is not None:
+            st.dataframe(response_core.data, use_container_width=True, height=200)
+            st.caption(f"Shape: {response_core.data.shape}")
+        else:
+            st.info("No data available")
+
+    with tab2:
+        st.markdown("**`response.selected_data`**")
+        if response_core.selected_data is not None and len(response_core.selected_data) > 0:
+            st.dataframe(response_core.selected_data, use_container_width=True, height=200)
+            st.caption(f"Selected: {len(response_core.selected_data)} rows")
+        else:
+            st.info("No rows selected")
+
+    with tab3:
+        st.markdown("**`response.grid_state`**")
+        if response_core.grid_state:
+            st.json(response_core.grid_state)
+        else:
+            st.info("No grid state available")
+
+    with tab4:
+        st.markdown("**`response.event_data`**")
+        if response_core.event_data:
+            st.json(response_core.event_data)
+        else:
+            st.info("No event data available")
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+response = AgGrid(df, gridOptions=gridOptions, key="my_grid")
+
+# Access core properties
+all_data = response.data                    # DataFrame of all/filtered/sorted data
+selected = response.selected_data           # DataFrame of selected rows (or None)
+state = response.grid_state                 # Dict with grid state
+col_state = response.columns_state          # Dict with column configurations
+event = response.event_data                 # Dict with last event info
+options = response.grid_options             # Dict with applied grid options
+
+# Example: Save grid state to session
+st.session_state['saved_grid_state'] = response.grid_state
+
+# Example: Restore grid state
+gb = GridOptionsBuilder.from_dataframe(df)
+gb.configure_grid_options(initialState=st.session_state.get('saved_grid_state'))
+""", language="python")
+
+
+def section_row_id_properties():
+    """Row ID Properties Section"""
+    st.header("Row ID Properties", anchor="row-id-properties")
+
+    st.markdown("""
+    The `AgGridReturn` object provides properties for tracking row IDs after filtering and sorting.
+    These are particularly useful when you need to:
+    - Track which specific rows remain visible after filtering
+    - Maintain row identity across grid operations
+    - Implement custom data synchronization logic
+
+    ### rows_id_after_filter
+
+    Returns a list of row IDs for rows that pass the current filter criteria.
+    Row IDs are typically the DataFrame index values.
+
+    ### rows_id_after_sort_and_filter
+
+    Returns a list of row IDs after both filtering and sorting have been applied.
+    The order of IDs matches the displayed order in the grid.
+
+    ### selected_rows_id
+
+    Returns a list of row IDs for currently selected rows.
+    This comes from the grid state's `rowSelection` property.
+    """)
+
+    st.markdown("### Interactive Example")
+
+    st.info("Apply filters and sorting to the grid below. The row ID properties will update to reflect the current state.")
+
+    # Create data with explicit index
+    df_with_index = df_employees.copy()
+    df_with_index.index.name = 'id'
+
+    gb_rowid = GridOptionsBuilder.from_dataframe(df_with_index)
+    gb_rowid.configure_default_column(sortable=True, filter=True, minWidth=100)
+    gb_rowid.configure_selection(selection_mode='multiple', use_checkbox=True)
+    gb_rowid.configure_column('::auto_unique_id::', hide=True)
+
+    gridOptions_rowid = gb_rowid.build()
+    response_rowid = AgGrid(
+        df_with_index,
+        gridOptions=gridOptions_rowid,
+        height=300,
+        key="row_id_example",
+        data_return_mode='FILTERED_AND_SORTED'
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("**After Filter**")
+        st.code(f"rows_id_after_filter:\n{response_rowid.rows_id_after_filter}", language="python")
+
+    with col2:
+        st.markdown("**After Sort & Filter**")
+        st.code(f"rows_id_after_sort_and_filter:\n{response_rowid.rows_id_after_sort_and_filter}", language="python")
+
+    with col3:
+        st.markdown("**Selected IDs**")
+        st.code(f"selected_rows_id:\n{response_rowid.selected_rows_id}", language="python")
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+response = AgGrid(df, gridOptions=gridOptions, key="my_grid")
+
+# Get row IDs after various operations
+filtered_ids = response.rows_id_after_filter           # IDs after filtering
+sorted_filtered_ids = response.rows_id_after_sort_and_filter  # IDs after sort+filter
+selected_ids = response.selected_rows_id               # IDs of selected rows
+
+# Example: Reindex DataFrame based on grid order
+if response.rows_id_after_sort_and_filter:
+    ordered_df = df.loc[response.rows_id_after_sort_and_filter]
+""", language="python")
+
+
+def section_data_return_modes():
+    """Data Return Modes Section"""
+    st.header("Data Return Modes", anchor="data-return-modes")
+
+    st.markdown("""
+    The `data_return_mode` parameter controls what data is returned in the `response.data` property.
+    Understanding these modes is crucial for efficient data handling.
+
+    ### Available Modes
+
+    **AS_INPUT** (Default)
+    - Returns all data as it was originally provided to AgGrid
+    - Ignores any filtering or sorting applied by the user
+    - Fastest option, requires no processing
+    - Use when you don't need to respect grid state
+
+    **FILTERED**
+    - Returns only rows that pass current filter criteria
+    - Maintains original order (ignores sorting)
+    - Use when you need filtered data but not sorting
+
+    **FILTERED_AND_SORTED**
+    - Returns filtered rows in the order displayed in the grid
+    - Respects both filtering and sorting operations
+    - Use when you need data exactly as the user sees it
+
+    ### Comparison Example
+
+    The example below demonstrates all three modes side-by-side with the same grid state.
+    """)
+
+    st.info("Apply filters and sorting to the grid. Observe how each mode returns different data.")
+
+    # Create three grids with different modes
+    col1, col2, col3 = st.columns(3)
+
+    modes = [
+        ('AS_INPUT', col1),
+        ('FILTERED', col2),
+        ('FILTERED_AND_SORTED', col3)
+    ]
+
+    # Use smaller dataset for clarity
+    df_small = df_employees.head(5).copy()
+
+    for mode, col in modes:
+        with col:
+            st.markdown(f"**{mode}**")
+
+            gb = GridOptionsBuilder.from_dataframe(df_small)
+            gb.configure_default_column(sortable=True, filter=True, minWidth=80)
+            gb.configure_column('::auto_unique_id::', hide=True)
+            gridOptions = gb.build()
+
+            response = AgGrid(
+                df_small,
+                gridOptions=gridOptions,
+                height=250,
+                key=f"mode_{mode}",
+                data_return_mode=mode
+            )
+
+            st.caption(f"Returned {len(response.data) if response.data is not None else 0} rows")
+
+            with st.expander(f"Show data", expanded=False):
+                if response.data is not None:
+                    st.dataframe(response.data[['Employee', 'Department']], use_container_width=True)
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+# AS_INPUT - All data, original order
+response = AgGrid(df, data_return_mode='AS_INPUT', key="grid1")
+all_data = response.data  # All rows, ignoring filters/sorting
+
+# FILTERED - Filtered data, original order
+response = AgGrid(df, data_return_mode='FILTERED', key="grid2")
+filtered_data = response.data  # Only filtered rows, original order
+
+# FILTERED_AND_SORTED - Filtered and sorted data
+response = AgGrid(df, data_return_mode='FILTERED_AND_SORTED', key="grid3")
+final_data = response.data  # Filtered and sorted as displayed
+""", language="python")
+
+
+def section_dictionary_interface():
+    """Dictionary Interface Section"""
+    st.header("Dictionary Interface", anchor="dictionary-interface")
+
+    st.markdown("""
+    For backward compatibility, `AgGridReturn` implements a dictionary-like interface.
+    This allows legacy code to work without modification.
+
+    ### Dictionary-Style Access
+
+    You can access properties using either:
+    - Modern property syntax: `response.data`
+    - Dictionary syntax: `response['data']`
+
+    Both approaches return the same values.
+
+    ### Dictionary Methods
+
+    The following dictionary methods are supported:
+    - `response.keys()` — List all available properties
+    - `response.values()` — List all property values
+    - `len(response)` — Count of properties
+    - `for key in response` — Iterate over property names
+    """)
+
+    st.markdown("### Interactive Example")
+
+    gb_dict = GridOptionsBuilder.from_dataframe(df_employees.head(5))
+    gb_dict.configure_default_column(sortable=True, filter=True, minWidth=100)
+    gb_dict.configure_selection(selection_mode='single')
+    gb_dict.configure_column('::auto_unique_id::', hide=True)
+
+    gridOptions_dict = gb_dict.build()
+    response_dict = AgGrid(
+        df_employees.head(5),
+        gridOptions=gridOptions_dict,
+        height=250,
+        key="dict_interface_example"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Property Access**")
+        st.code("""
+# Modern syntax (recommended)
+data = response.data
+selected = response.selected_data
+state = response.grid_state
+""", language="python")
+
+        st.markdown("**Result:**")
+        st.code(f"response.data.shape = {response_dict.data.shape if response_dict.data is not None else None}", language="python")
+
+    with col2:
+        st.markdown("**Dictionary Access**")
+        st.code("""
+# Legacy syntax (still works)
+data = response['data']
+selected = response['selected_data']
+state = response['grid_state']
+""", language="python")
+
+        st.markdown("**Result:**")
+        st.code(f"response['data'].shape = {response_dict['data'].shape if response_dict['data'] is not None else None}", language="python")
+
+    st.markdown("**Available Keys:**")
+    keys_list = list(response_dict.keys())[:15]  # Limit to first 15
+    st.code(', '.join(keys_list), language="text")
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+response = AgGrid(df, key="my_grid")
+
+# Both access methods work identically
+assert response.data.equals(response['data'])
+assert response.selected_data == response['selected_data']
+
+# Dictionary methods
+all_keys = response.keys()              # List of property names
+all_values = response.values()          # List of property values
+num_props = len(response)               # Count of properties
+
+# Iteration
+for key in response:
+    value = response[key]
+    print(f"{key}: {type(value)}")
+""", language="python")
+
+
+def section_multiindex_example():
+    """MultiIndex Grid Example Section"""
+    st.header("Working with MultiIndex DataFrames", anchor="multiindex-example")
+
+    st.markdown("""
+    This example demonstrates interactive row grouping and pivoting with AG Grid Enterprise features.
+    The grid starts in **pivot mode** with data grouped by Region → Product and pivoted by Quarter,
+    showing aggregated values across quarters.
+
+    **Initial Setup:**
+    - **Row Groups**: Region, Product (creating hierarchy)
+    - **Pivot**: Metric × Quarter (Sales-Q1, Sales-Q2, ..., Profit-Q1, Profit-Q2, ... as columns)
+    - **Values**: Sum of Value column
+    - **Result**: Cross-tabulation showing Sales vs Profit across all quarters
+
+    **Data Structure (Unbalanced Groups):**
+    - **North region**: 3 products (A, B, C) with different color counts
+    - **South region**: 2 products (A, B) with varying colors
+    - **West region**: 1 product (A) with 2 colors
+
+    **Interactive Features - Try These:**
+
+    **Row Grouping (at top of grid):**
+    - **Drag columns** to the "Row Groups" panel to group by them (e.g., drag "Region" or "Product")
+    - **Change order** - Drag groups within the panel to change hierarchy
+    - **Remove groups** - Click X on a group chip to remove it
+    - **Expand/collapse** - Click arrows in group rows to drill down
+
+    **Pivoting (at top of grid):**
+    - **Enable pivot mode** - Drag a column to "Pivot" panel to enable pivot mode
+    - **Drag values** - Drag numeric columns to "Values" panel for aggregation
+    - **Multiple dimensions** - Combine row groups + pivot columns for cross-tabulation
+
+    **Selection & Data Access:**
+    - **Select groups** - Check a group node (e.g., "North") to select all its children
+    - **Select leaf rows** - Check specific items
+    - **View tabs below** - See how `dataGroups` organizes your grouped/pivoted data
+
+    **Sidebar (click ≡ icon):**
+    - **Columns panel** - Show/hide columns
+    - **Filters panel** - Advanced filtering
+    """)
+
+    # Create DataFrame with flat columns suitable for pivoting
+    np.random.seed(42)
+
+    # Create unbalanced data - different numbers of items per region
+    data_rows = []
+
+    # North region (3 products with varying colors)
+    for product in ['Product A', 'Product B', 'Product C']:
+        colors = ['Blue', 'Red', 'Green'] if product == 'Product A' else ['Blue', 'Red'] if product == 'Product B' else ['Blue']
+        for color in colors:
+            for metric in ['Sales', 'Profit']:
+                for quarter in ['Q1', 'Q2', 'Q3', 'Q4']:
+                    data_rows.append({
+                        'Region': 'North',
+                        'Product': product,
+                        'Color': color,
+                        'Metric': metric,
+                        'Quarter': quarter,
+                        'Value': np.random.randint(100, 1000)
+                    })
+
+    # South region (2 products with varying colors)
+    for product in ['Product A', 'Product B']:
+        colors = ['Red', 'Green'] if product == 'Product A' else ['Blue', 'Red', 'Green', 'Yellow']
+        for color in colors:
+            for metric in ['Sales', 'Profit']:
+                for quarter in ['Q1', 'Q2', 'Q3', 'Q4']:
+                    data_rows.append({
+                        'Region': 'South',
+                        'Product': product,
+                        'Color': color,
+                        'Metric': metric,
+                        'Quarter': quarter,
+                        'Value': np.random.randint(100, 1000)
+                    })
+
+    # West region (1 product)
+    for color in ['Blue', 'Red']:
+        for metric in ['Sales', 'Profit']:
+            for quarter in ['Q1', 'Q2', 'Q3', 'Q4']:
+                data_rows.append({
+                    'Region': 'West',
+                    'Product': 'Product A',
+                    'Color': color,
+                    'Metric': metric,
+                    'Quarter': quarter,
+                    'Value': np.random.randint(100, 1000)
+                })
+
+    df_multi = pd.DataFrame(data_rows)
+
+    # Build grid with interactive grouping, pivoting, and selection
+    gb = GridOptionsBuilder.from_dataframe(df_multi)
+    gb.configure_default_column(
+        resizable=True,
+        filterable=True,
+        sortable=True,
+        enableRowGroup=True,  # Allow columns to be dragged to row group panel
+        enablePivot=True,     # Allow columns to be dragged to pivot panel
+    )
+
+    # Configure dimension columns (for grouping/pivoting)
+    for col in ['Region', 'Product', 'Color', 'Metric', 'Quarter']:
+        gb.configure_column(col, enableRowGroup=True, enablePivot=True)
+
+    # Configure value column (for aggregation)
+    gb.configure_column('Value',
+        enableValue=True,
+        aggFunc='sum',  # Default aggregation function
+        checkboxSelection=True,
+        headerCheckboxSelection=True
+    )
+
+    # Enable row grouping and pivot panels
+    gb.configure_side_bar(
+        filters_panel=True,
+        columns_panel=True,
+        defaultToolPanel="columns"
+    )
+
+    gb.configure_grid_options(
+        rowSelection='multiple',
+        suppressRowClickSelection=True,
+        groupSelectsChildren=True,     # Selecting a group selects all its children
+        groupSelectsFiltered=True,     # Group selection respects filters
+        rowGroupPanelShow='always',    # Show row group panel at top
+        pivotPanelShow='always',       # Show pivot panel at top
+        pivotMode=True,                # Start in pivot mode by default
+        suppressAggFuncInHeader=False,  # Show aggregation function in headers
+        groupDefaultExpanded=-1,        # Expand all row groups by default (-1 = all levels)
+        suppressExpandablePivotGroups=True,  # Don't allow collapsing pivot column groups - keeps Metric/Quarter visible
+    )
+
+    # Set default grouping and pivoting for initial display
+    gb.configure_column('Region', rowGroup=True, hide=True)  # Group by Region
+    gb.configure_column('Product', rowGroup=True, hide=True)  # Then by Product
+    gb.configure_column('Metric', pivot=True, hide=True)     # Pivot by Metric (Sales/Profit)
+    gb.configure_column('Quarter', pivot=True, hide=True)    # Then by Quarter (Q1-Q4)
+
+    gridOptions = gb.build()
+    response_multi = AgGrid(
+        df_multi,
+        gridOptions=gridOptions,
+        height=500,
+        theme='streamlit',
+        enable_enterprise_modules=True,
+        key='multiindex_demo_aggrid_return',
+        isolate_styles=False
+    )
+
+    # Show AgGridReturn data
+    st.markdown("### Response Data")
+
+    tab1, tab2, tab3, tab4 = st.tabs(["data", "selected_data", "dataGroups", "selected_dataGroups"])
+
+    with tab1:
+        st.markdown("**`response.data`**")
+        if response_multi.data is not None:
+            st.dataframe(response_multi.data, use_container_width=True)
+            st.caption(f"Total rows: {len(response_multi.data)}")
+        else:
+            st.info("No data available")
+
+    with tab2:
+        st.markdown("**`response.selected_data`**")
+        if response_multi.selected_data is not None and len(response_multi.selected_data) > 0:
+            st.dataframe(response_multi.selected_data, use_container_width=True)
+            st.caption(f"Selected {len(response_multi.selected_data)} rows")
+        else:
+            st.info("No rows selected. Use checkboxes to select rows.")
+
+    with tab3:
+        st.markdown("**`response.dataGroups`**")
+        try:
+            data_groups = response_multi.dataGroups
+            if data_groups:
+                st.caption(f"Found {len(data_groups)} groups")
+                # Now it's a simple dict, much easier to iterate!
+                for i, (group_key, group_df) in enumerate(list(data_groups.items())[:5]):  # Show first 5
+                    if group_key:  # Skip empty tuple
+                        with st.expander(f"Group {group_key} ({len(group_key)} level{'s' if len(group_key) != 1 else ''})", expanded=(i == 0)):
+                            st.dataframe(group_df, use_container_width=True)
+                            st.caption(f"{len(group_df)} rows in this group")
+                    else:
+                        st.dataframe(group_df, use_container_width=True)
+                        st.caption(f"All data (no grouping): {len(group_df)} rows")
+                if len(data_groups) > 5:
+                    st.info(f"Showing first 5 of {len(data_groups)} groups")
+            else:
+                st.info("No grouped data. This grid doesn't have row grouping enabled.")
+        except Exception as e:
+            st.error(f"Error accessing dataGroups: {e}")
+
+    with tab4:
+        st.markdown("**`response.selected_dataGroups`**")
+        try:
+            selected_groups = response_multi.selected_dataGroups
+            if selected_groups:
+                st.caption(f"Found {len(selected_groups)} selected groups")
+                # Simple dict iteration - much cleaner!
+                for i, (group_key, group_df) in enumerate(list(selected_groups.items())[:5]):  # Show first 5
+                    if group_key and group_df is not None and len(group_df) > 0:
+                        with st.expander(f"Group {group_key} ({len(group_key)} level{'s' if len(group_key) != 1 else ''})", expanded=(i == 0)):
+                            st.dataframe(group_df, use_container_width=True)
+                            st.caption(f"{len(group_df)} rows in this group")
+                    elif not group_key and group_df is not None and len(group_df) > 0:
+                        st.dataframe(group_df, use_container_width=True)
+                        st.caption(f"Selected data (no grouping): {len(group_df)} rows")
+                if len(selected_groups) > 5:
+                    st.info(f"Showing first 5 of {len(selected_groups)} groups")
+            else:
+                st.info("No selected groups. Select some rows using checkboxes.")
+        except Exception as e:
+            st.error(f"Error accessing selected_dataGroups: {e}")
+
+    with st.expander("Show code", expanded=False):
+        st.code("""
+from streamlit_aggrid import AgGrid, GridOptionsBuilder
+import pandas as pd
+import numpy as np
+
+# Create flat DataFrame suitable for pivoting
+data_rows = []
+
+# Create unbalanced data structure
+regions = {
+    'North': {
+        'Product A': ['Blue', 'Red', 'Green'],
+        'Product B': ['Blue', 'Red'],
+        'Product C': ['Blue']
+    },
+    'South': {
+        'Product A': ['Red', 'Green'],
+        'Product B': ['Blue', 'Red', 'Green', 'Yellow']
+    },
+    'West': {
+        'Product A': ['Blue', 'Red']
+    }
+}
+
+# Generate data rows
+for region, products in regions.items():
+    for product, colors in products.items():
+        for color in colors:
+            for metric in ['Sales', 'Profit']:
+                for quarter in ['Q1', 'Q2', 'Q3', 'Q4']:
+                    data_rows.append({
+                        'Region': region,
+                        'Product': product,
+                        'Color': color,
+                        'Metric': metric,
+                        'Quarter': quarter,
+                        'Value': np.random.randint(100, 1000)
+                    })
+
+df = pd.DataFrame(data_rows)
+
+# Build grid with interactive grouping and pivoting
+gb = GridOptionsBuilder.from_dataframe(df)
+gb.configure_default_column(resizable=True, filterable=True, sortable=True)
+
+# Configure dimension columns (for grouping/pivoting)
+for col in ['Region', 'Product', 'Color', 'Metric', 'Quarter']:
+    gb.configure_column(col, enableRowGroup=True, enablePivot=True)
+
+# Configure value column (for aggregation)
+gb.configure_column('Value',
+    enableValue=True,
+    aggFunc='sum',
+    checkboxSelection=True,
+    headerCheckboxSelection=True
+)
+
+# Enable interactive panels
+gb.configure_side_bar(
+    filters_panel=True,
+    columns_panel=True,
+    defaultToolPanel=""
+)
+
+gb.configure_grid_options(
+    rowSelection='multiple',
+    suppressRowClickSelection=True,
+    groupSelectsChildren=True,
+    groupSelectsFiltered=True,
+    rowGroupPanelShow='always',    # Show Row Groups panel
+    pivotPanelShow='always',       # Show Pivot panel
+    pivotMode=True,                # Start in pivot mode
+    suppressAggFuncInHeader=False,
+    groupDefaultExpanded=-1,       # Expand all row groups
+    suppressExpandablePivotGroups=True  # Keep pivot columns expanded (Metric/Quarter visible)
+)
+
+# Set default grouping and pivoting
+gb.configure_column('Region', rowGroup=True, hide=True)  # Group by Region
+gb.configure_column('Product', rowGroup=True, hide=True)  # Then by Product
+gb.configure_column('Metric', pivot=True, hide=True)     # Pivot by Metric (Sales/Profit)
+gb.configure_column('Quarter', pivot=True, hide=True)    # Then by Quarter (Q1-Q4)
+
+# Render grid
+gridOptions = gb.build()
+response = AgGrid(
+    df,
+    gridOptions=gridOptions,
+    height=500,
+    enable_enterprise_modules=True
+)
+
+# Access response data
+selected = response.selected_data  # Selected rows only
+all_data = response.data           # All data (respecting filters/sorts)
+
+# Access grouped data - now returns a simple Dict!
+all_groups = response.dataGroups           # Dict[tuple, DataFrame]
+selected_groups = response.selected_dataGroups  # Dict[tuple, DataFrame]
+
+# Iterate through groups - much simpler now!
+for group_key, group_df in all_groups.items():
+    print(f"Group {group_key}: {len(group_df)} rows")
+    # group_key is a tuple like ('North',) or ('North', 'Product A')
+    # group_df is a DataFrame with the rows in that group
+
+# Direct access to specific group
+north_data = all_groups[('North',)]
+
+# Filter groups by level (length of tuple)
+regions = {k: v for k, v in all_groups.items() if len(k) == 1}  # Top level
+products = {k: v for k, v in all_groups.items() if len(k) == 2}  # Second level
+""", language="python")
+
+
+# ============================================================================
+# RENDER SECTIONS BASED ON CONFIGURATION
+# ============================================================================
+
+if SECTIONS.get('overview', False):
+    section_overview()
+    st.divider()
+
+if SECTIONS.get('basic_usage', False):
+    section_basic_usage()
+    st.divider()
+
+if SECTIONS.get('core_properties', False):
+    section_core_properties()
+    st.divider()
+
+if SECTIONS.get('row_id_properties', False):
+    section_row_id_properties()
+    st.divider()
+
+if SECTIONS.get('data_return_modes', False):
+    section_data_return_modes()
+    st.divider()
+
+if SECTIONS.get('dictionary_interface', False):
+    section_dictionary_interface()
+    st.divider()
+
+if SECTIONS.get('multiindex_example', False):
+    section_multiindex_example()
+
+
+# ============================================================================
+# FOOTER
+# ============================================================================
+
+st.divider()
+
+st.markdown("""
+## Additional Resources
+
+For more information on AG Grid features and configuration:
+
+- [AG Grid Documentation](https://www.ag-grid.com/javascript-data-grid/)
+- [streamlit-aggrid GitHub Repository](https://github.com/PablocFonseca/streamlit-aggrid)
+- [AG Grid Grid State](https://ag-grid.com/javascript-data-grid/grid-state/)
+- [AG Grid Column State](https://ag-grid.com/javascript-data-grid/column-state/)
+
+Explore other sections of this documentation for more examples and use cases.
+""")

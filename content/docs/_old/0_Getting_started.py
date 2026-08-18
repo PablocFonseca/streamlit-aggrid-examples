@@ -2,11 +2,7 @@ import streamlit as st
 from st_aggrid import AgGrid
 import pandas as pd
 
-
-try:
-    st.set_page_config(layout="wide")
-except Exception:
-    pass
+st.set_page_config(layout="wide")
 
 st.markdown("# Getting Started with AgGrid")
 
